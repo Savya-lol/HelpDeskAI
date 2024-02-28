@@ -100,13 +100,14 @@ namespace HelpDeskAI.Controllers
 
         private void CreateUser(User model)
         {
-            com.CommandText = "INSERT INTO users (first_name, last_name, username, email, password) " +
-                              "VALUES (@fname, @lname, @uname, @mail, @pass)";
+            com.CommandText = "INSERT INTO users (first_name, last_name, username, email, password,confirm) " +
+                              "VALUES (@fname, @lname, @uname, @mail, @pass,@isconfirmed)";
             com.Parameters.AddWithValue("@fname", model.FirstName);
             com.Parameters.AddWithValue("@lname", model.LastName);
             com.Parameters.AddWithValue("@uname", model.Username);
             com.Parameters.AddWithValue("@mail", model.Email);
             com.Parameters.AddWithValue("@pass", model.Password);
+            com.Parameters.AddWithValue("@isconfirmed", model.IsConfirmed.ToString());
 
             com.ExecuteNonQuery();
             Console.WriteLine("User created successfully.");
@@ -141,7 +142,8 @@ namespace HelpDeskAI.Controllers
                     last_name VARCHAR(50) NOT NULL,
                     username VARCHAR(25) NOT NULL UNIQUE,
                     email VARCHAR(50) NOT NULL UNIQUE,
-                    password VARCHAR(255) NOT NULL);
+                    password VARCHAR(255) NOT NULL,
+                    confirm VARCHAR(5),);
                 ";
 
                         using (var createCmd = con.CreateCommand())

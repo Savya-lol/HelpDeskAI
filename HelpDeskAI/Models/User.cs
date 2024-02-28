@@ -25,5 +25,6 @@ namespace HelpDeskAI.Models
         public string Password { get; set; }
 
         public string ConfirmPassword { get; set; }
+        public bool IsConfirmed { get; set; } = false;
     }
 }
