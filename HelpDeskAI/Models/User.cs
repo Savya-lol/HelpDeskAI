@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace HelpDeskAI.Models
 {
@@ -9,13 +10,16 @@ namespace HelpDeskAI.Models
         [Required]
         public string LastName { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Username is required for registration")]
         public string Username { get; set; }
+
         [Required]
+        [EmailAddress]
         public string Email { get; set; }
-        [Required]
+
+        [Required(ErrorMessage = "Password is required for registration")]
         public string Password { get; set; }
-        
+
         public string ConfirmPassword { get; set; }
     }
 }

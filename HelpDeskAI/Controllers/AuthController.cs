@@ -17,9 +17,13 @@ namespace HelpDeskAI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login(string email, string pass)
+        public async Task<IActionResult> Login(string email, string password)
         {
             ViewBag.Action = "login";
+            if(ModelState.IsValid)
+            {
+
+            }
             return View();
         }
 

@@ -2,4 +2,26 @@
     ViewData["Title"] = "Login";
 }
 
-<Partial name="_Auth" model="@Model">
+@model Login;
+
+<div class="container">
+    <div class="form-container">
+
+            <h2 class="form-title">Log in to your account</h2>
+        <form method="post" asp-controller="auth" asp-action="Login">
+            <div class="text-danger" asp-validation-summary="All"></div>
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label">Email</label>
+                <input type="email" asp-for="Email" class="form-control" placeholder="johndoe@example.com">
+            </div>
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label">Password</label>
+                <input type="password" asp-for="Password" class="form-control" placeholder="●●●●●●●●●●●">
+                <p class="p-0">By logging in, you agree to our Terms of Service and Privacy Policy</p>
+                <button type="submit" class="btn btn-primary">Log in</button>
+        </form>
+        <div class="form-footer">
+                <a asp-controller="auth" asp-action="register">Don't have an account? Sign Up</a>
+        </div>
+    </div>
+</div>
