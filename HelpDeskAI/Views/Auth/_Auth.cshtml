@@ -1,0 +1,8 @@
+﻿@model User;
+@{
+    string action = ViewBag.action;
+}
+
+<form action="post" asp-controller="Auth" asp-action=@action.ToString()>
+
+</form>
