@@ -7,20 +7,26 @@ namespace HelpDeskAI.Controllers
     {
         public IActionResult Login()
         {
-            return View();
+            ViewBag.Action = "login";
+            return View();;
         }
         public IActionResult Register()
         {
+            ViewBag.Action = "register";
             return View();
         }
 
+        [HttpPost]
         public async Task<IActionResult> Login(string email, string pass)
         {
+            ViewBag.Action = "login";
             return View();
         }
 
+        [HttpPost]
         public async Task<IActionResult> Register(User Model)
         {
+            ViewBag.Action = "register";
             return View();
         }
     }
