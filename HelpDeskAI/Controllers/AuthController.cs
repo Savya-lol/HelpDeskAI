@@ -1,6 +1,7 @@
 ﻿using HelpDeskAI.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Data.SqlClient;
 using System.Reflection;
@@ -29,6 +30,12 @@ namespace HelpDeskAI.Controllers
             return View();
         }
 
+        public IActionResult Verify(string email)
+        {
+            email = email == null? "example@email.com":email;
+            return View("verify",email);
+        }
+
         [HttpPost]
         public async Task<IActionResult> Login(string email, string password)
         {
@@ -52,6 +59,13 @@ namespace HelpDeskAI.Controllers
                 }
             }
             return View();
+        }
+        
+        [Authorize]
+        public async Task<IActionResult> LogOut()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return RedirectToAction("Index", "Home");
         }
 
         bool Verify(string email, string password)
@@ -143,8 +157,8 @@ namespace HelpDeskAI.Controllers
                     username VARCHAR(25) NOT NULL UNIQUE,
                     email VARCHAR(50) NOT NULL UNIQUE,
                     password VARCHAR(255) NOT NULL,
-                    confirm VARCHAR(5),);
-                ";
+                    confirm VARCHAR(5),
+                    role varchar(50),);";
 
                         using (var createCmd = con.CreateCommand())
                         {

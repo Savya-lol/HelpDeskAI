@@ -1,0 +1,42 @@
+﻿@model string;
+@{
+    ViewData["Title"] = "Verification";
+}
+<style>
+    .btn-primary {
+        height: 50px;
+        border-radius: 5px;
+        font-size: 1rem;
+        padding: 0 20px;
+        background-color: #007bff;
+        border-color: #007bff;
+        text-align: center;
+        width: 100%;
+        font-family: 'Roboto', sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .center{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 10;
+    }
+
+    .button-margin {
+        margin-top: 2rem;
+    }
+</style>
+<div class="form-container">
+    <h1 class="form-title">Almost There!</h1>
+    <p class="center form-label">We've sent you an email at @Model.</p>
+    <p class="center form-label">Please follow the instructions in the email.</p>
+    <div class="mb-3">
+        <a asp-controller="Auth" asp-action="Verify" class="btn btn-primary button-margin">Resend Verification Email</a>
+        </div>
+    <div class="form-footer">
+        <a href="#" class="cta-link">Didn't receive the email?</a>
+    </div>
+</div>
