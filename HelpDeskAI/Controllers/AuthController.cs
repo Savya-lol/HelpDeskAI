@@ -101,9 +101,8 @@ namespace HelpDeskAI.Controllers
 
                 if (IsValidResetPasswordToken(model.email, model.token))
                 {
-                    string hashedPassword = HashPassword(password);
 
-                    UpdateSpecific("email", model.email, "password", hashedPassword);
+                    UpdateSpecific("email", model.email, "password", model.Password);
 
                     TempData.Remove("ResetPassToken");
 
@@ -130,11 +129,6 @@ namespace HelpDeskAI.Controllers
             dr.Close();
             con.Close();
             return result;
-        }
-
-        private string HashPassword(string password)
-        {
-            return Crypto.HashPassword(password);
         }
 
         [Authorize]
@@ -239,14 +233,13 @@ namespace HelpDeskAI.Controllers
                 ConnectToDB();
             }
 
-            string hashedpass = HashPassword(model.Password);
             com.CommandText = "INSERT INTO users (first_name, last_name, username, email, password,confirm,token) " +
                               "VALUES (@fname, @lname, @uname, @mail, @pass,@conf_status,@conf_token)";
             com.Parameters.AddWithValue("@fname", model.FirstName);
             com.Parameters.AddWithValue("@lname", model.LastName);
             com.Parameters.AddWithValue("@uname", model.Username);
             com.Parameters.AddWithValue("@mail", model.Email);
-            com.Parameters.AddWithValue("@pass", hashedpass);
+            com.Parameters.AddWithValue("@pass", model.Password);
             com.Parameters.AddWithValue("@conf_status", model.IsConfirmed.ToString());
             com.Parameters.AddWithValue("@conf_token", model.ConfirmationToken.ToString());
 
