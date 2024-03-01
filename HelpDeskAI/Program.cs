@@ -1,3 +1,4 @@
+using HelpDeskAI.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +16,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.SlidingExpiration = true;
         options.AccessDeniedPath = "/Home/AccessDenied";
     });
+builder.Services.AddScoped<UserDataAccess>(
+    provider => new UserDataAccess("Server=localhost;Database=helpdeskai;Trusted_Connection=True;"));
 
 var app = builder.Build();
 

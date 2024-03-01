@@ -1,10 +1,15 @@
-﻿namespace HelpDeskAI.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace HelpDeskAI.Models
 {
     public class ResetPasswordModel
     {
+        [Required]
             public string Password { get; set; }
-            public string ConfirmPassword { get; set; }
+        [Required]
+        public string ConfirmPassword { get; set; }
             public string email { get; set; }
-            public string token { get; set; }
+        [Required]
+        public string token { get; set; }
     }
 }

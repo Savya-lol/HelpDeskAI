@@ -1,30 +1,27 @@
 ﻿using HelpDeskAI.Models;
+using HelpDeskAI.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Mail;
 using System.Reflection;
 using System.Security.Claims;
-using System.Threading.Tasks;
 using System.Web.Helpers;
 
 namespace HelpDeskAI.Controllers
 {
     public class AuthController : Controller
     {
-        private readonly SqlConnection con = new SqlConnection();
-        private readonly SqlCommand com = new SqlCommand();
-        private SqlDataReader dr;
 
-        private void ConnectionString()
+        private readonly UserDataAccess _userDataAccess;
+
+        public AuthController(UserDataAccess userDataAccess)
         {
-            con.ConnectionString = "Server=localhost;Database=helpdeskai;Trusted_Connection=True;";
+            _userDataAccess = userDataAccess;
         }
 
         public IActionResult Login()
@@ -56,79 +53,30 @@ namespace HelpDeskAI.Controllers
             {
                 if (Verify(email, password))
                 {
-                    var claims = new List<Claim>
+                    if (_userDataAccess.GetSpecific<String>("confirm", "email", email) == "True")
+                    {
+                        var claims = new List<Claim>
                     {
                         new Claim(ClaimTypes.Email, email),
-                        new Claim(ClaimTypes.Role, "User")
+                        new Claim(ClaimTypes.Role, "User") // Assuming a 'User' role
                     };
 
-                    var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
 
-                    await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
-
-                    return RedirectToAction("Index", "Home");
+                        return RedirectToAction("Index", "Home");
+                    }
+                    else
+                    {
+                        return SendConfirmationEmail(_userDataAccess.GetUserByEmail(email));
+                    }
                 }
                 else
                 {
                     ModelState.AddModelError("", "Invalid email or password or unverified account.");
                 }
             }
-
             return View();
-        }
-
-        public IActionResult ResetPass(ResetPasswordModel model)
-        {
-
-            Debug.WriteLine(model.token);
-            if (model.token!=null)
-            {
-                return View(model);
-            }
-
-            ViewBag.Message = "Invalid or missing reset password token.";
-            return RedirectToAction("RequestEmail", "Auth");
-        }
-
-
-        public IActionResult ResetPassword(ResetPasswordModel model)
-        {
-            string password = model.Password;
-            string confirmPassword = model.ConfirmPassword;
-
-            if (password.Length >= 8 && (password == confirmPassword) && password != null)
-            {
-
-                if (IsValidResetPasswordToken(model.email, model.token))
-                {
-
-                    UpdateSpecific("email", model.email, "password", model.Password);
-
-                    TempData.Remove("ResetPassToken");
-
-                    return RedirectToAction("Login", "Auth");
-                }
-
-                ViewBag.Message = "Invalid or unauthorized reset password request.";
-                return View("ResetPass");
-            }
-
-            ModelState.AddModelError("", "Invalid Password, Password must be longer than 8 characters and must match with confirm password");
-            return View("ResetPass");
-        }
-
-        private bool IsValidResetPasswordToken(string email, string resetPassToken)
-        {
-            ConnectToDB();
-            com.CommandText = "SELECT * FROM users WHERE email=@Email AND token=@Token";
-            com.Parameters.AddWithValue("@Email", email);
-            com.Parameters.AddWithValue("@Token", resetPassToken);
-
-            dr = com.ExecuteReader();
-            bool result = dr.Read();
-            dr.Close();
-            con.Close();
-            return result;
         }
 
         [Authorize]
@@ -138,266 +86,176 @@ namespace HelpDeskAI.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        private bool Verify(string email, string password)
+        public IActionResult ResetPass(User model)
         {
-            ConnectToDB();
-            com.CommandText = "SELECT * FROM users WHERE email='" + email + "' AND password='" + password + "' AND confirm='True'";
-            dr = com.ExecuteReader();
-            bool result = dr.Read();
-            dr.Close();
-            con.Close();
-            return result;
+
+            Debug.WriteLine("Email Supplied after getting model " + model.Email);
+            Debug.WriteLine("ResetPassToken:" + model.ConfirmationToken);
+            if (model.ConfirmationToken != null)
+            {
+                Debug.WriteLine("Email Supplied "+model.Email);
+                return View(new ResetPasswordModel { email=model.Email,token=model.ConfirmationToken});
+            }
+
+            ViewBag.Message = "Invalid or missing reset password token.";
+            return RedirectToAction("RequestEmail", "Auth");
         }
 
-        private void SendConfirmationEmail(User user)
+
+        public IActionResult ResetPassword(ResetPasswordModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View("ResetPass", model);
+            }
+
+            if (!IsValidResetPasswordToken(model.email, model.token))
+            {
+                ModelState.AddModelError(" ", "Token Invalid");
+                return View("ResetPass", model);
+            }
+
+
+            _userDataAccess.UpdateUserPassword(model.email, model.Password);
+            return RedirectToAction("Login", "Auth");
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> Register(User model)
+        {
+            if (ModelState.IsValid)
+            {
+                if (_userDataAccess.UserExists("username", model.Username) || _userDataAccess.UserExists("email", model.Email))
+                {
+                    ModelState.AddModelError("", "Username or email already exists.");
+                    return View();
+                }
+
+                _userDataAccess.CreateUser(model);
+                return SendConfirmationEmail(model);
+            }
+            return View();
+        }
+
+        public IActionResult ConfirmEmail(string token, string resetpass = "False")
+        {
+            Debug.WriteLine(token + " " + resetpass);
+            if (!string.IsNullOrEmpty(token))
+            {
+                User user = _userDataAccess.GetUserByConfirmationToken(token);
+                Debug.WriteLine("User After getting:" + user.Email);
+                if (user != null)
+                {
+                    if (resetpass == "False")
+                    {
+                        _userDataAccess.ConfirmUserEmail(user);
+                        ViewBag.Message = "Email confirmed successfully!";
+                        return RedirectToAction("Index", "Home");
+                    }
+                    else
+                    {
+
+                        Debug.WriteLine("Token Supplied before getting model " + user.ConfirmationToken);
+                        return RedirectToAction("ResetPass", "Auth",  user );
+                    }
+                }
+            }
+            ViewBag.Message = "Confirmation failed.";
+            return RedirectToAction("RequestEmail", "Auth");
+        }
+
+        private bool IsValidResetPasswordToken(string email, string resetPassToken)
+        {
+            return _userDataAccess.UserExists("email", email, "token", resetPassToken);
+        }
+
+        private IActionResult SendConfirmationEmail(User user)
         {
             user.ConfirmationToken = Guid.NewGuid().ToString();
-            UpdateSpecific("email", user.Email, "token", user.ConfirmationToken);
+            _userDataAccess.UpdateUserToken(user);
 
-            string confirmationLink = Url.Action(
-                "ConfirmEmail", "Auth", new { token = user.ConfirmationToken }, Request.Scheme);
-
+            string confirmationLink = Url.Action("ConfirmEmail", "Auth", new { token = user.ConfirmationToken }, Request.Scheme);
             string message = $"Please confirm your email by clicking this link: {confirmationLink}";
             SendMail(user.Email, "Email Verification", message);
+            return RedirectToAction("Verify", "Auth", new { email = user.Email });
+        }
+
+        public IActionResult SendVerificationEmail(User user)
+        {
+            if(_userDataAccess.GetUserByEmail(user.Email).IsConfirmed=="True")
+            {
+                return SendResetEmail(user);
+            }
+            else
+            {
+               return SendConfirmationEmail(user);
+            }
         }
 
         public IActionResult SendResetEmail(User user)
         {
             user.ConfirmationToken = Guid.NewGuid().ToString();
-            UpdateSpecific("email", user.Email, "token", user.ConfirmationToken);
+            _userDataAccess.UpdateSpecific("email", user.Email, "token", user.ConfirmationToken);
 
-            // Set reset parameter to true in the link for reset password
             string resetLink = Url.Action(
                 "ConfirmEmail", "Auth", new { token = user.ConfirmationToken, resetpass = "True" }, Request.Scheme);
 
             string message = $"To reset your password, click on the following link: {resetLink}";
             SendMail(user.Email, "Password Reset", message);
 
-            return RedirectToAction("Verify", new {email=user.Email});
+            return RedirectToAction("Verify","Auth", new { email = user.Email });
         }
 
-
-        private void SendMail(string email, string subject, string msg)
+        private async Task SendMail(string email, string subject, string msg)
         {
-            string SmtpServer = "smtp-relay.brevo.com";
-            int SmtpPort = 587;
-            string UserName = "tropedotuber@gmail.com";
-            string Password = "Xj9WYRac4pNsQkGM";
-
-            var message = new MailMessage(UserName, email, subject, msg);
-            message.IsBodyHtml = true;
-
-            var client = new SmtpClient(SmtpServer);
-            client.Credentials = new NetworkCredential(UserName, Password);
-            client.Port = SmtpPort;
-            client.EnableSsl = true;
-
-            client.Send(message);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Register(User Model)
-        {
-            if (ModelState.IsValid)
+            try
             {
-                ConnectToDB();
-                if (IsUserExists(Model.Username, Model.Email))
+                string smtpServer = "smtp-relay.brevo.com";
+                int smtpPort = 587;
+                string userName = "tropedotuber@gmail.com";
+                string password = "Xj9WYRac4pNsQkGM";
+
+                var message = new MailMessage(userName, email, subject, msg);
+                message.IsBodyHtml = true;
+
+                var client = new SmtpClient(smtpServer);
+                client.Credentials = new NetworkCredential(userName, password);
+                client.Port = smtpPort;
+                client.EnableSsl = true;
+
+                await client.SendMailAsync(message);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error sending email: {ex.Message}");
+            }
+        }
+
+        private bool Verify(string email, string password)
+        {
+            string query = "SELECT password FROM users WHERE email=@Email AND confirm = 'True'";
+
+            using (SqlConnection connection = new SqlConnection(_userDataAccess._connectionString))
+            {
+                connection.Open();
+                using (SqlCommand cmd = new SqlCommand(query, connection))
                 {
-                    ModelState.AddModelError("", "Username or email already exists.");
-                    return View();
-                }
+                    cmd.Parameters.AddWithValue("@Email", email);
 
-                CreateUser(Model);
-
-                return RedirectToAction("Verify", "auth", new { email = Model.Email });
-            }
-
-            return View();
-        }
-
-        private bool IsUserExists(string username, string email)
-        {
-            com.CommandText = "SELECT COUNT(*) FROM users WHERE username=@Username OR email=@Email";
-            com.Parameters.AddWithValue("@Username", username);
-            com.Parameters.AddWithValue("@Email", email);
-
-            int count = (int)com.ExecuteScalar();
-
-            return count > 0;
-        }
-
-        private void CreateUser(User model)
-        {
-            if (con.State == System.Data.ConnectionState.Closed)
-            {
-                ConnectToDB();
-            }
-
-            com.CommandText = "INSERT INTO users (first_name, last_name, username, email, password,confirm,token) " +
-                              "VALUES (@fname, @lname, @uname, @mail, @pass,@conf_status,@conf_token)";
-            com.Parameters.AddWithValue("@fname", model.FirstName);
-            com.Parameters.AddWithValue("@lname", model.LastName);
-            com.Parameters.AddWithValue("@uname", model.Username);
-            com.Parameters.AddWithValue("@mail", model.Email);
-            com.Parameters.AddWithValue("@pass", model.Password);
-            com.Parameters.AddWithValue("@conf_status", model.IsConfirmed.ToString());
-            com.Parameters.AddWithValue("@conf_token", model.ConfirmationToken.ToString());
-
-            com.ExecuteNonQuery();
-            con.Close();
-            Console.WriteLine("User created successfully.");
-            SendConfirmationEmail(model);
-        }
-
-        private void UpdateUser(User model)
-        {
-            if (con.State == System.Data.ConnectionState.Closed)
-            {
-                ConnectToDB();
-            }
-
-            com.CommandText = "UPDATE users SET " +
-                              "first_name=@fname, " +
-                              "last_name=@lname, " +
-                              "email=@mail, " +
-                              "password=@pass, " +
-                              "confirm=@conf_status " +
-                              "WHERE username=@uname";
-            com.Parameters.AddWithValue("@fname", model.FirstName);
-            com.Parameters.AddWithValue("@lname", model.LastName);
-            com.Parameters.AddWithValue("@uname", model.Username);
-            com.Parameters.AddWithValue("@mail", model.Email);
-            com.Parameters.AddWithValue("@pass", model.Password);
-            com.Parameters.AddWithValue("@conf_status", model.IsConfirmed.ToString());
-            com.ExecuteNonQuery();
-            con.Close();
-        }
-
-        public IActionResult ConfirmEmail(string token, string resetpass= "False")
-        {
-            Debug.WriteLine(token+ " " + resetpass);
-            if (!string.IsNullOrEmpty(token))
-            {
-                User user = GetUserByConfirmationToken(token);
-                if (resetpass == "False")
-                {
-                    if (user != null)
+                    using (SqlDataReader reader = cmd.ExecuteReader())
                     {
-                        user.IsConfirmed = true;
-                        Console.WriteLine("User Found");
-                        user.ConfirmationToken = null;
-                        UpdateUser(user);
-                        ViewBag.Message = "Email confirmed successfully!";
-                        return RedirectToAction("Index", "Home");
-                    }
-                }
-                else
-                {
-                    if (user != null)
-                    {
-                        TempData["UserEmail"] = user.Email;
-                        TempData["ResetPassToken"] = user.ConfirmationToken;
-                        var resetPasswordModel = new ResetPasswordModel
+                        if (reader.HasRows)
                         {
-                            email = user.Email,
-                            token = user.ConfirmationToken
-                        };
-                        return RedirectToAction("ResetPass", "Auth", resetPasswordModel);
-                    }
-                }
-            }
-
-            ViewBag.Message = "Confirmation failed.";
-            return RedirectToAction("RequestEmail", "Auth");
-        }
-
-        private User GetUserByConfirmationToken(string token)
-        {
-            ConnectToDB();
-
-            com.CommandText = "SELECT * FROM users WHERE token=@conf_token";
-            com.Parameters.AddWithValue("@conf_token", token);
-
-            using (var reader = com.ExecuteReader())
-            {
-                if (reader.HasRows)
-                {
-                    reader.Read();
-                    return new User
-                    {
-                        FirstName = (string)reader["first_name"],
-                        LastName = (string)reader["last_name"],
-                        Username = (string)reader["username"],
-                        Email = (string)reader["email"],
-                        Password = (string)reader["password"],
-                        ConfirmationToken = (string)reader["token"]
-                    };
-                }
-                return null;
-            }
-        }
-
-        private void ConnectToDB()
-        {
-            if (con.State != System.Data.ConnectionState.Open)
-            {
-                ConnectionString();
-                con.Open();
-                com.Connection = con;
-            }
-            else
-            {
-                Console.WriteLine("Connection is already open.");
-            }
-
-            using (var cmd = con.CreateCommand())
-            {
-                cmd.CommandText = @"
-            SELECT TABLE_NAME
-            FROM INFORMATION_SCHEMA.TABLES
-            WHERE TABLE_SCHEMA = 'dbo'
-            AND TABLE_NAME = 'users';
-        ";
-
-                using (var reader = cmd.ExecuteReader())
-                {
-                    if (!reader.HasRows)
-                    {
-                        reader.Close();
-
-                        string createTable = @"
-    CREATE TABLE users (
-        id INT PRIMARY KEY IDENTITY(1,1),
-        first_name VARCHAR(50) NOT NULL,
-        last_name VARCHAR(50) NOT NULL,
-        username VARCHAR(25) NOT NULL UNIQUE,
-        email VARCHAR(50) NOT NULL UNIQUE,
-        password VARCHAR(255) NOT NULL,
-        confirm VARCHAR(5),
-        role VARCHAR(50) DEFAULT 'User' NOT NULL,
-        token VARCHAR(255)
-    );";
-
-                        using (var createCmd = con.CreateCommand())
-                        {
-                            createCmd.CommandText = createTable;
-                            createCmd.ExecuteNonQuery();
-                            Console.WriteLine("Table 'users' created successfully.");
+                            reader.Read();
+                            string storedHashedPassword = reader.GetString(0);
+                            return Crypto.VerifyHashedPassword(storedHashedPassword, password);
                         }
                     }
                 }
             }
+            return false;
         }
 
-        void UpdateSpecific(string condition, string identifier, string query, object value)
-        {
-            ConnectToDB();
-            com.CommandText = "UPDATE users SET " +
-                        query + " = @value " +
-                        "WHERE " + condition + " = @identifier";
-            com.Parameters.AddWithValue("@value", value);
-            com.Parameters.AddWithValue("@identifier", identifier);
-            com.ExecuteNonQuery();
-        }
     }
 }
