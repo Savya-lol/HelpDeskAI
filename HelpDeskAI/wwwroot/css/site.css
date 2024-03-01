@@ -25,7 +25,8 @@ html {
 } 
 .reger{
   display: grid;
-  margin: 50px auto;
+  margin: 50px !important;
+  width: 500px;
   padding: 2rem;
   background-color: #fff;
   border-radius: 10px;
@@ -39,6 +40,10 @@ html {
     box-shadow: 0 0 50px 10px #9b9b9bbd;
     
  
+}
+.ani{
+    position: inherit;
+  margin: 50px !important;
 }
 body {
     background-color: #ffff;
