@@ -4,6 +4,7 @@ namespace HelpDeskAI.Models
 {
     public class User
     {
+        public string ConfirmationToken { get; set; } = String.Empty;
         [Required]
         [MaxLength(50,ErrorMessage ="First Name too long")]
         public string FirstName { get; set; }
@@ -23,7 +24,6 @@ namespace HelpDeskAI.Models
         [MaxLength(50, ErrorMessage = "Password too long")]
         [MinLength(8, ErrorMessage ="Password should be atleast 8 characters long")]
         public string Password { get; set; }
-
         public string ConfirmPassword { get; set; }
         public bool IsConfirmed { get; set; } = false;
     }

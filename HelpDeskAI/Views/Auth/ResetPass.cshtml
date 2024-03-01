@@ -1,0 +1,30 @@
+﻿@{
+    ViewData["Title"] = "Reset Password";
+}
+@model ResetPasswordModel;
+
+<div class="container">
+    <div class="form-container">
+        <h2 class="form-title">Let's change your password</h2>
+        <form method="post" asp-controller="auth" asp-action="ResetPassword" enctype="application/x-www-form-urlencoded">
+            <div class="text-danger" asp-validation-summary="All"></div>
+            <div class="mb-3">
+                <label for="password" class="form-label">New Password</label>
+                <input type="password" name="Password" class="form-control" placeholder="●●●●●●●●●●●">
+            </div>
+            <div class="mb-3">
+                <label for="confirmpassword" class="form-label">Confirm Password</label>
+                <input type="password" name="ConfirmPassword" class="form-control" placeholder="●●●●●●●●●●●">
+            </div>
+            <input type="hidden" name="Email" value="@Model.email" />
+            <input type="hidden" name="Token" value="@Model.token" />
+            <p class="p-0">By changing your password, you agree to our Terms of Service and Privacy Policy</p>
+            <button type="submit" class="btn btn-primary">Change</button>
+        </form>
+
+
+        <div class="form-footer">
+            <a asp-controller="auth" asp-action="login">Made a mistake? Go Back</a>
+        </div>
+    </div>
+</div>
