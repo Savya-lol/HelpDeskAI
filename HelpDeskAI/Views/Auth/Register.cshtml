@@ -3,8 +3,7 @@
     ViewData["Title"] = "Register";
 }
 
-
-<div class="container">
+<div class="reg">
     <div class="form-container">
             <h2 class="form-title">Let's get started with your account</h2>
         <form method="post" asp-controller="auth" asp-action="Register">
@@ -36,10 +35,13 @@
                     <input type="password" asp-for="ConfirmPassword" class="form-control" placeholder="●●●●●●●●●●●">
                 </div>
                 <p class="p-0">By signing up, you agree to our Terms of Service and Privacy Policy</p>
-                <button type="submit" class="btn btn-primary">Sign up</button>
+                <button type="submit" class="btn-primary">Sign up</button>
         </form>
         <div class="form-footer">
-                <a asp-controller="auth" asp-action="login">Already have an account? Log in</a>
+             <a asp-controller="auth" asp-action="login" >Already have an account? Log in</a>
         </div>
+
+    <div class="ani">
+
     </div>
-</div>
+
