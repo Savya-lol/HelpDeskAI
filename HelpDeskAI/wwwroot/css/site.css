@@ -24,12 +24,14 @@ img{
 }
 .btn-primary:hover{
     transform: translateY(-2px);
+    color: yellow;
 }
 .chat{
     background-color: #0062cc;
     border-end-end-radius: 30px;
     border-start-end-radius: 30px;
     display: contents;
+
 }
 .log{
     display: flex;
