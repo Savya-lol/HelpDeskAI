@@ -58,7 +58,7 @@ namespace HelpDeskAI.Controllers
                         var claims = new List<Claim>
                     {
                         new Claim(ClaimTypes.Email, email),
-                        new Claim(ClaimTypes.Role, "User") // Assuming a 'User' role
+                        new Claim(ClaimTypes.Role, _userDataAccess.GetSpecific<string>("role","email",email))
                     };
 
                         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -94,6 +94,7 @@ namespace HelpDeskAI.Controllers
             if (model.ConfirmationToken != null)
             {
                 Debug.WriteLine("Email Supplied "+model.Email);
+                ModelState.Clear();
                 return View(new ResetPasswordModel { email=model.Email,token=model.ConfirmationToken});
             }
 
@@ -183,14 +184,22 @@ namespace HelpDeskAI.Controllers
 
         public IActionResult SendVerificationEmail(User user)
         {
-            if(_userDataAccess.GetUserByEmail(user.Email).IsConfirmed=="True")
+            if (!ModelState.IsValid)
+            {
+                return RedirectToAction("RequestEmail");
+            }
+            User retrievedUser = _userDataAccess.GetUserByEmail(user.Email);
+            if (retrievedUser == null)
+            {
+                ModelState.AddModelError(" ","No User Found.");
+                return RedirectToAction("RequestEmail");
+            }
+
+            if (retrievedUser.IsConfirmed == "True")
             {
                 return SendResetEmail(user);
             }
-            else
-            {
-               return SendConfirmationEmail(user);
-            }
+            return SendConfirmationEmail(user);
         }
 
         public IActionResult SendResetEmail(User user)

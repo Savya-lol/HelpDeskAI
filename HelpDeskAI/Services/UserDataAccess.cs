@@ -189,7 +189,7 @@ namespace HelpDeskAI.Services
                                 Password = reader.GetString(5),
                                 IsConfirmed = reader.GetString(6),
                                 Role = reader.GetString(7),
-                                ConfirmationToken = reader.GetString(8)
+                                ConfirmationToken = reader.IsDBNull(8) ? "" : reader.GetString(8),
                             };
                         }
                     }

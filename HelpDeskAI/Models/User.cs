@@ -26,6 +26,6 @@ namespace HelpDeskAI.Models
         public string IsConfirmed { get; set; } = "False";
 
         public string Role { get; set; } = "user";
-        public string ConfirmationToken { get; set; } = string.Empty;
+        public string? ConfirmationToken { get; set; } = string.Empty;
     }
 }
