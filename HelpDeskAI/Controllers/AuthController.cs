@@ -18,10 +18,12 @@ namespace HelpDeskAI.Controllers
     {
 
         private readonly UserDataAccess _userDataAccess;
+        private readonly MailService _mailService;
 
-        public AuthController(UserDataAccess userDataAccess)
+        public AuthController(UserDataAccess userDataAccess, MailService mailService)
         {
             _userDataAccess = userDataAccess;
+            _mailService = mailService;
         }
 
         public IActionResult Login()
@@ -178,7 +180,7 @@ namespace HelpDeskAI.Controllers
 
             string confirmationLink = Url.Action("ConfirmEmail", "Auth", new { token = user.ConfirmationToken }, Request.Scheme);
             string message = $"Please confirm your email by clicking this link: {confirmationLink}";
-            SendMail(user.Email, "Email Verification", message);
+            _ = _mailService.SendMail(user.Email, "Email Verification", message);
             return RedirectToAction("Verify", "Auth", new { email = user.Email });
         }
 
@@ -211,34 +213,9 @@ namespace HelpDeskAI.Controllers
                 "ConfirmEmail", "Auth", new { token = user.ConfirmationToken, resetpass = "True" }, Request.Scheme);
 
             string message = $"To reset your password, click on the following link: {resetLink}";
-            SendMail(user.Email, "Password Reset", message);
+            _ = _mailService.SendMail(user.Email, "Password Reset", message);
 
             return RedirectToAction("Verify","Auth", new { email = user.Email });
-        }
-
-        private async Task SendMail(string email, string subject, string msg)
-        {
-            try
-            {
-                string smtpServer = "smtp-relay.brevo.com";
-                int smtpPort = 587;
-                string userName = "tropedotuber@gmail.com";
-                string password = "Xj9WYRac4pNsQkGM";
-
-                var message = new MailMessage(userName, email, subject, msg);
-                message.IsBodyHtml = true;
-
-                var client = new SmtpClient(smtpServer);
-                client.Credentials = new NetworkCredential(userName, password);
-                client.Port = smtpPort;
-                client.EnableSsl = true;
-
-                await client.SendMailAsync(message);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error sending email: {ex.Message}");
-            }
         }
 
         private bool Verify(string email, string password)

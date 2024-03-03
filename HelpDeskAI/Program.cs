@@ -18,6 +18,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 builder.Services.AddScoped<UserDataAccess>(
     provider => new UserDataAccess("Server=localhost;Database=helpdeskai;Trusted_Connection=True;"));
+builder.Services.AddScoped<MailService>(
+    provider => new MailService("smtp-relay.brevo.com", 587, "tropedotuber@gmail.com", "Xj9WYRac4pNsQkGM"));
 
 var app = builder.Build();
 
