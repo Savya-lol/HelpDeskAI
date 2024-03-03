@@ -1,50 +1,51 @@
-﻿@model HelpDeskAI.Models.User
+﻿@model User;
 @{
     ViewData["Title"] = "Register";
 }
 
 <div class="reg">
-    <div class="form-container">
-        <h2 class="form-title">Let's get started with your account</h2>
-        <form method="post" asp-controller="Auth" asp-action="Register">
+    
+    <div class="reger">
+            <h2 class="form-title">Let's get started with your account</h2>
+        <form method="post" asp-controller="auth" asp-action="Register">
             <div class="text-danger" asp-validation-summary="All"></div>
-            <div class="row mb-3">
-                <div class="col">
-                    <label asp-for="FirstName" class="form-label">First Name</label>
-                    <input type="text" asp-for="FirstName" class="form-control" placeholder="John">
-                    <span asp-validation-for="FirstName" class="text-danger"></span>
+                <div class="row mb-3">
+                    <div class="col">
+                        <label asp-for="FirstName" class="form-label">First Name</label>
+                        <input type="text" asp-for="FirstName" class="form-control" placeholder="John">
+                    </div>
+                    <div class="col">
+                        <label asp-for="LastName" class="form-label">Last Name</label>
+                        <input type="text" asp-for="LastName" class="form-control" placeholder="Doe">
+                    </div>
                 </div>
-                <div class="col">
-                    <label asp-for="LastName" class="form-label">Last Name</label>
-                    <input type="text" asp-for="LastName" class="form-control" placeholder="Doe">
-                    <span asp-validation-for="LastName" class="text-danger"></span>
+                <div class="mb-3">
+                    <label asp-for="Username" class="form-label">Username</label>
+                    <input type="text" asp-for="Username" class="form-control" placeholder="johndoe">
                 </div>
-            </div>
-            <div class="mb-3">
-                <label asp-for="Username" class="form-label">Username</label>
-                <input type="text" asp-for="Username" class="form-control" placeholder="johndoe">
-                <span asp-validation-for="Username" class="text-danger"></span>
-            </div>
             <div class="mb-3">
                 <label asp-for="Email" class="form-label">Email</label>
                 <input type="email" asp-for="Email" class="form-control" placeholder="johndoe@example.com">
-                <span asp-validation-for="Email" class="text-danger"></span>
             </div>
             <div class="mb-3">
                 <label asp-for="Password" class="form-label">Password</label>
-                <input type="password" asp-for="Password" class="form-control" placeholder="●●●●●●●●●">
-                <span asp-validation-for="Password" class="text-danger"></span>
+                <input type="password" asp-for="Password" class="form-control" placeholder="●●●●●●●●●●●">
             </div>
-            <div class="mb-3">
-                <label asp-for="ConfirmPassword" class="form-label">Confirm Password</label>
-                <input type="password" asp-for="ConfirmPassword" class="form-control" placeholder="●●●●●●●●">
-                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-            </div>
-            <p class="p-0">By signing up, you agree to our Terms of Service and Privacy Policy</p>
-            <button type="submit" class="btn-primary">Sign up</button>
+                <div class="mb-3">
+                    <label asp-for="ConfirmPassword" class="form-label">Confirm Password</label>
+                    <input type="password" asp-for="ConfirmPassword" class="form-control" placeholder="●●●●●●●●●●●">
+                </div>
+                <p class="p-0">By signing up, you agree to our Terms of Service and Privacy Policy</p>
+                <button type="submit" class="btn-primary">Sign up</button>
         </form>
         <div class="form-footer">
-            <a asp-controller="Auth" asp-action="Login">Already have an account? Log in</a>
+             <a asp-controller="auth" asp-action="login" >Already have an account? Log in</a>
         </div>
-        <div class="ani"></div>
     </div>
+    <div class="ani">
+        
+        <img src="public/img.jpg" alt="iski ma ki chut">
+        </div>
+   
+    </div>
+

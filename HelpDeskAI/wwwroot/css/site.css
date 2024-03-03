@@ -20,12 +20,13 @@ html {
     border: 2px solid rgb(0, 0, 0, .5);
     border-radius: 20px;
     box-shadow: 0 0 50px 10px #9b9b9bbd;
-    width: 400px;
-    height: 500px;
-}
+    width: 500px;
+  
+} 
 .reger{
   display: grid;
-  margin: 50px auto;
+  margin: 50px !important;
+  width: 500px;
   padding: 2rem;
   background-color: #fff;
   border-radius: 10px;
@@ -40,13 +41,16 @@ html {
     
  
 }
+.ani{
+    position: inherit;
+  margin: 50px !important;
+}
 body {
     background-color: #ffff;
     font-family: 'Roboto', sans-serif;
 }
 
 .form-container {
-    width: 400px;
     margin: 50px !important;
     padding: 5px;
     background-color: #fff;
@@ -99,9 +103,7 @@ body {
 
 .form-footer {
     display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-top: 20px;
+    margin: 20px auto;
 }
 
     .form-footer a {
