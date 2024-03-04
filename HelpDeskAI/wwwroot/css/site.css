@@ -30,8 +30,20 @@ img{
     background-color: #0062cc;
     border-end-end-radius: 30px;
     border-start-end-radius: 30px;
-    display: contents;
+    text-align: left;
+    margin-left: 0;
+    white-space: pre-wrap;
+    margin-right: 0;
 
+}
+.you{
+    background-color: #0062cc;
+    border-end-start-radius: 30px;
+    border-start-start-radius: 30px;
+    text-align: right;
+    margin-right: 0;
+    white-space: pre-wrap;
+    margin-right: 0;
 }
 .log{
     display: flex;
@@ -64,6 +76,11 @@ img{
     position: inherit;
   margin: 50px !important;
 }
+
+.side{
+    background-color: black;
+    width: 100px;
+  }
 body {
     background-color: #ffff;
     font-family: 'Roboto', sans-serif;
