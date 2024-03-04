@@ -1,20 +1,40 @@
 ﻿@using System.Security.Claims
 @{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Chat";
     var logged_in_email = User.FindFirstValue(ClaimTypes.Email);
 }
 
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    @if (!User.Identity.IsAuthenticated)
-{
-   <a asp-controller="auth" asp-action="Register">Register</a> <br />
-   <a asp-controller="auth" asp-action="Login">Login</a>
-}
-else{
-        <p> Logged in as: @logged_in_email</p>
-    <a asp-controller="user" asp-action="Profile" asp-route-email=@logged_in_email>View Profile</a> <br />
-        <a asp-controller="Auth" asp-action="Logout">Logout</a>
-}
+<div class="container-fluid h-100">
+	<div class="row justify-content-center h-100">
+		<div class="col-md-8 col-xl-6 chat">
+			<div class="card">
+				<div class="card-header msg_head">
+					<div class="d-flex bd-highlight">
+						<div class="img_cont">
+						</div>
+						<div class="user_info">
+							<span>HelpDeskAI</span>
+
+						</div>
+					</div>
+				</div>
+				<div id="messageFormeight" class="card-body msg_card_body">
+				</div>
+				<div class="card-footer">
+					<form id="messageArea" class="input-group">
+						<input type="text" id="text" name="msg" placeholder="Type your message..." autocomplete="off" class="form-control type_msg" required />
+						<div class="input-group-append">
+							<button type="submit" id="send" class="input-group-text send_btn"><i class="fas fa-location-arrow"></i></button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="prof">
+		about ai
+	</div>
 </div>
+
