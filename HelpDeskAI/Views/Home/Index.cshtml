@@ -1,11 +1,20 @@
-﻿@{
+﻿@using System.Security.Claims
+@{
     ViewData["Title"] = "Home Page";
+    var logged_in_email = User.FindFirstValue(ClaimTypes.Email);
 }
 
 
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>
-    
+    @if (!User.Identity.IsAuthenticated)
+{
    <a asp-controller="auth" asp-action="Register">Register</a> <br />
    <a asp-controller="auth" asp-action="Login">Login</a>
+}
+else{
+        <p> Logged in as: @logged_in_email</p>
+    <a asp-controller="user" asp-action="Profile" asp-route-email=@logged_in_email>View Profile</a> <br />
+        <a asp-controller="Auth" asp-action="Logout">Logout</a>
+}
 </div>

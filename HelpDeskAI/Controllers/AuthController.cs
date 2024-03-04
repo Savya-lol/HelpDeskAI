@@ -3,6 +3,7 @@ using HelpDeskAI.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Data.SqlClient;
 using System.Diagnostics;
@@ -46,6 +47,13 @@ namespace HelpDeskAI.Controllers
         public IActionResult RequestEmail()
         {
             return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return RedirectToAction("Index", "Home");
         }
 
         [HttpPost]
@@ -154,7 +162,7 @@ namespace HelpDeskAI.Controllers
                     {
                         _userDataAccess.ConfirmUserEmail(user);
                         ViewBag.Message = "Email confirmed successfully!";
-                        return RedirectToAction("Index", "Home");
+                        return RedirectToAction("Login", "Auth");
                     }
                     else
                     {

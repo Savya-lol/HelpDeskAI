@@ -1,0 +1,131 @@
+﻿@{
+    ViewData["Title"] = "Profile";
+}
+@model User;
+<style>
+    .profile-picture {
+        width: 150px;
+        height: auto;
+        border-radius: 50%;
+    }
+
+    .header{
+        margin-bottom: 25px;
+        font-size: 2rem;
+        font-weight: bold;
+        font-family: 'Roboto', sans-serif;
+    }
+
+    .user-name,
+    .user-email,
+    .card-content{
+        margin-left: 10px;
+    }
+
+    table {
+        table-layout: fixed;
+        width: 100%;
+    }
+
+    th, td {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 0.75rem;
+        vertical-align: top;
+        border-top: 1px solid #dee2e6;
+    }
+
+    th {
+        vertical-align: bottom;
+        border-bottom: 2px solid #dee2e6;
+        font-weight: 600;
+    }
+
+        th:first-child, td:first-child {
+            border-left: 2px solid #dee2e6;
+        }
+
+    .d-flex.align-center {
+        align-items: center;
+    }
+
+    .mr-3 {
+        margin-right: 1rem;
+    }
+</style>
+<div class="container mt-5">
+    <h4 class="header">User Profile</h4>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-center mb-3">
+                        <img src="https://2.gravatar.com/avatar/da4ab5e32630848d1fd60732566992ca76c1b4c399113ea35fdc245313911d05?size=256" alt="Profile Picture" class="card-img-top profile-picture mr-3">
+                        <div>
+                            <h5 class="card-title user-name">@Model.Username</h5>
+                            <p class="card-text user-email">@Model.Email</p>
+                        </div>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">
+                            <strong>First Name:</strong>
+                            <span class="card-content">@Model.FirstName</span>
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Last Name:</strong>
+                            <span class="card-content">@Model.LastName</span>
+                        </li>
+                        <li class="list-group-item">
+                            <strong>No. Of Chats:</strong>
+                            <span class="card-content">0</span>
+                        </li>
+                        <li class="list-group-item">
+                            <strong>Verified:</strong>
+                            <span class="card-content">
+                                @if (Model.IsConfirmed == "True")
+                                {
+                                    <i class="fa-solid fa-check"></i>
+                                }
+                                else
+                                {
+                                    <i class="fa-solid fa-xmark"></i>
+                                }
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Chat #</th>
+                        <th>Title</th>
+                        <th class="date-column">Date</th>
+                        <th class="actions-column">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>#234</td>
+                        <td>Can't login to account</td>
+                        <td class="date-column">Jun 3, 2022</td>
+                        <td class="actions-column">
+                            <button class="btn btn-primary btn-sm"><i class="fas fa-download"></i> Download Transcript</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>#678</td>
+                        <td>Billing issue</td>
+                        <td class="date-column">Aug 5, 2022</td>
+                        <td class="actions-column">
+                            <button class="btn btn-primary btn-sm"><i class="fas fa-download"></i> Download Transcript</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
