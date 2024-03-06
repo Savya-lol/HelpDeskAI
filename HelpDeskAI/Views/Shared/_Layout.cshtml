@@ -12,29 +12,30 @@
 <body>
     <header>
      
-        <div class="sidebar">
-            <ul style="list-style-type:none">
-              <li><a class="active" href="/">HelpDeskAI</a></li>
-              <li> <a href="">Settings</a></li>
-              <li><a href="">Chat</a></li>
-              <li><a href="">Support queue</a></li>
-              <li> <a asp-controller="auth" asp-action="login" style="text-decoration: none; margin-top:80;">Log in</a><br></li>
-              <li><a asp-controller="auth" asp-action="register"style="text-decoration: none; margin-bottom:0;">Sign up</a></li>
-            </ul>
- 
-</div>
+       <div class="container">
+    <div class="sidebar">
+        <pre> 
+        <a href="/" class="active" >HelpDeskAI</a>
+        <a href="">Settings</a>
+        <a href="">Chat</a>
+        <a href="">Support queue</a>
+        <a asp-controller="auth" asp-action="login">Log in</a>
+        <a asp-controller="auth" asp-action="register">Sign up</a>
+        </pre>
+     
+    </div>
+  
+  </div>
     </header>
-    <div class="container">
+    <div
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
-
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2024 - HelpDeskAI - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
+    <hr>
+    <footer>
+    <p>&copy; 2024 Your Company | <a href="/privacy-policy">Privacy Policy</a></p>
+  </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
