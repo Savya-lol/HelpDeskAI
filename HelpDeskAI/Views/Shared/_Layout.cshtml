@@ -11,31 +11,18 @@
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">HelpDeskAI</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between" >
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-        @* <div class="sidebar">
-  <a class="active" href="/">My Profile</a>
-  <a href="">Settings</a>
-  <a href="">Chat</a>
-  <a href="">Support queue</a>
-</div> *@
+     
+        <div class="sidebar">
+            <ul style="list-style-type:none">
+              <li><a class="active" href="/">HelpDeskAI</a></li>
+              <li> <a href="">Settings</a></li>
+              <li><a href="">Chat</a></li>
+              <li><a href="">Support queue</a></li>
+              <li> <a asp-controller="auth" asp-action="login" style="text-decoration: none; margin-top:80;">Log in</a><br></li>
+              <li><a asp-controller="auth" asp-action="register"style="text-decoration: none; margin-bottom:0;">Sign up</a></li>
+            </ul>
+ 
+</div>
     </header>
     <div class="container">
         <main role="main" class="pb-3">
@@ -44,7 +31,7 @@
     </div>
 
     <footer class="border-top footer text-muted">
-        <div class="container" style="position:absolute">
+        <div class="container">
             &copy; 2024 - HelpDeskAI - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
