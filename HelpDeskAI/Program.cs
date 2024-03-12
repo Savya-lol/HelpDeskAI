@@ -1,8 +1,9 @@
 using HelpDeskAI.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
-
+var config = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsettings.json", true).AddEnvironmentVariables().Build();
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
@@ -17,9 +18,9 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.AccessDeniedPath = "/Home/AccessDenied";
     });
 builder.Services.AddScoped<UserDataAccess>(
-    provider => new UserDataAccess("Server=localhost;Database=helpdeskai;Trusted_Connection=True;"));
+    provider => new UserDataAccess(config.GetValue<string>("DBConnectionString")));
 builder.Services.AddScoped<MailService>(
-    provider => new MailService("smtp-relay.brevo.com", 587, "tropedotuber@gmail.com", "Xj9WYRac4pNsQkGM"));
+    provider => new MailService(config.GetValue<string>("Smtp-Server"), config.GetValue<int>("Smtp-Port"), config.GetValue<string>("Smtp-Username"), config.GetValue<string>("Smtp-Password")));
 
 var app = builder.Build();
 
