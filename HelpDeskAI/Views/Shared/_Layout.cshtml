@@ -10,31 +10,38 @@
     <script src="https://kit.fontawesome.com/8fad92caf1.js" crossorigin="anonymous"></script>
 </head>
 <body>
-    <header>
+  
      
        <div class="container">
     <div class="sidebar">
-        <pre> 
-        <a href="/" class="active" >HelpDeskAI</a>
-        <a href="">Settings</a>
-        <a href="">Chat</a>
-        <a href="">Support queue</a>
-        <a asp-controller="auth" asp-action="login">Log in</a>
-        <a asp-controller="auth" asp-action="register">Sign up</a>
-        </pre>
-     
+       
+       <ol style="list-style:none;"> 
+           <li><a asp-controller="Home" asp-action="index">HelpDeskAI</a></li>
+                <li>   <a asp-controller="" asp-action="">Settings</a></li>
+                <li>  <a asp-controller="" asp-action="">Chat</a></li>
+                <li>  <a asp-controller="" asp-action="">Support queue</a></li>
+                @if (!User.Identity.IsAuthenticated)
+                {
+                    <li>  <a asp-controller="auth" asp-action="login">Log in</a></li>
+                
+                <li>  <a asp-controller="auth" asp-action="register">Sign up</a></li>
+                }
+                else{
+                <li>  <a asp-controller="auth" asp-action="logout">Log out</a></li>
+                }
+            </ol>     
     </div>
-  
-  </div>
-    </header>
-    <div
+        <div
         <main role="main" class="pb-3">
-            @RenderBody()
+                @RenderBody()
         </main>
     </div>
-    <hr>
+  </div>
+  
+
+  
     <footer>
-    <p>&copy; 2024 Your Company | <a href="/privacy-policy">Privacy Policy</a></p>
+    <p style="color:black;">&copy; 2024 Helpdeskai | <a href="/privacy-policy">Privacy Policy</a></p>
   </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
