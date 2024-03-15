@@ -34,8 +34,8 @@ namespace HelpDeskAI.Services
 
                 if (tableExists == 0)
                 {
-                    string createTableQuery = @"
-                    CREATE TABLE @roomtable (
+                    string createTableQuery = $@"
+                    CREATE TABLE {_roomTableName} (
                     RoomId INT IDENTITY(1,1) PRIMARY KEY,
                     OpenDate DATETIME,
                     ClosedDate DATETIME DEFAULT NULL,
@@ -44,7 +44,6 @@ namespace HelpDeskAI.Services
               ); 
             ";
                     var createCmd = new SqlCommand(createTableQuery, connection);
-                    createCmd.Parameters.AddWithValue("@roomtable", _roomTableName);
                     createCmd.ExecuteNonQuery();
                     Console.WriteLine("Table 'room' created successfully.");
                 }
@@ -57,30 +56,27 @@ namespace HelpDeskAI.Services
             {
                 connection.Open();
 
-                var cmd = new SqlCommand(
-                    @"SELECT COUNT(*) 
+                var cmdCheck = new SqlCommand(
+                    $@"SELECT COUNT(*) 
             FROM INFORMATION_SCHEMA.TABLES 
             WHERE TABLE_SCHEMA = 'dbo' 
-            AND TABLE_NAME = @chattable", connection);
-                cmd.Parameters.AddWithValue("@chattable", _chatTableName);
+            AND TABLE_NAME = '{_chatTableName}'", connection);
 
-                int tableExists = (int)cmd.ExecuteScalar();
+                int tableExists = (int)cmdCheck.ExecuteScalar();
 
                 if (tableExists == 0)
                 {
-                    string createTableQuery = @"
-              CREATE TABLE @chattable (
-                  MessageId INT PRIMARY KEY,
-                  SenderName VARCHAR(50),
-                  MessageContent VARCHAR(MAX),
-                  RoomId INT,
-                  Timestamp DATETIME,
-                  FOREIGN KEY (RoomId) REFERENCES @roomtable(RoomId)
-              ); 
-            ";
+                    string createTableQuery = $@"
+                CREATE TABLE {_chatTableName} (
+                    MessageId INT PRIMARY KEY,
+                    SenderName VARCHAR(50),
+                    MessageContent VARCHAR(MAX),
+                    RoomId INT,
+                    Timestamp DATETIME,
+                    FOREIGN KEY (RoomId) REFERENCES {_roomTableName}(RoomId)
+                )";
+
                     var createCmd = new SqlCommand(createTableQuery, connection);
-                    createCmd.Parameters.AddWithValue("@chattable", _chatTableName);
-                    createCmd.Parameters.AddWithValue("@roomtable", _roomTableName);
                     createCmd.ExecuteNonQuery();
                     Console.WriteLine("Table 'chat' created successfully.");
                 }
