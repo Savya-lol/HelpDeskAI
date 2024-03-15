@@ -1,18 +1,54 @@
-﻿using HelpDeskAI.Models.Auth;
+﻿using HelpDeskAI.Models;
+using HelpDeskAI.Models.Chat;
 using System.Data.SqlClient;
-using System.Diagnostics;
-using System.Web.Helpers;
+using System.Data.SqlTypes;
 
 namespace HelpDeskAI.Services
 {
-    public class ChatDataAccess
+    public class ChatDataAccess : DataAccess
     {
-        public readonly string _connectionString;
-
-        public ChatDataAccess(string connectionString)
+        public readonly string _chatTableName;
+        public readonly string _roomTableName;
+        public ChatDataAccess(string connectionString, string roomTableName, string chatTableName) : base(connectionString)
         {
-            _connectionString = connectionString;
+            _roomTableName = roomTableName;
+            _chatTableName = chatTableName;
+            CheckAndCreateRoomsTable();
             CheckAndCreateChatTable();
+        }
+
+        private void CheckAndCreateRoomsTable()
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                var cmd = new SqlCommand(
+                    @"SELECT COUNT(*) 
+            FROM INFORMATION_SCHEMA.TABLES 
+            WHERE TABLE_SCHEMA = 'dbo' 
+            AND TABLE_NAME = @roomtable", connection);
+                cmd.Parameters.AddWithValue("@roomtable", _roomTableName);
+
+                int tableExists = (int)cmd.ExecuteScalar();
+
+                if (tableExists == 0)
+                {
+                    string createTableQuery = @"
+                    CREATE TABLE @roomtable (
+                    RoomId INT IDENTITY(1,1) PRIMARY KEY,
+                    OpenDate DATETIME,
+                    ClosedDate DATETIME DEFAULT NULL,
+                    isAIassisted INT,
+                    RoomOwnerUsername VARCHAR(50)
+              ); 
+            ";
+                    var createCmd = new SqlCommand(createTableQuery, connection);
+                    createCmd.Parameters.AddWithValue("@roomtable", _roomTableName);
+                    createCmd.ExecuteNonQuery();
+                    Console.WriteLine("Table 'room' created successfully.");
+                }
+            }
         }
 
         private void CheckAndCreateChatTable()
@@ -22,33 +58,135 @@ namespace HelpDeskAI.Services
                 connection.Open();
 
                 var cmd = new SqlCommand(
-                   @"SELECT COUNT(*) 
+                    @"SELECT COUNT(*) 
             FROM INFORMATION_SCHEMA.TABLES 
             WHERE TABLE_SCHEMA = 'dbo' 
-            AND TABLE_NAME = 'users'", connection);
+            AND TABLE_NAME = @chattable", connection);
+                cmd.Parameters.AddWithValue("@chattable", _chatTableName);
 
                 int tableExists = (int)cmd.ExecuteScalar();
 
                 if (tableExists == 0)
                 {
                     string createTableQuery = @"
-              CREATE TABLE users (
-                  id INT PRIMARY KEY IDENTITY(1,1),
-                  first_name VARCHAR(50) NOT NULL,
-                  last_name VARCHAR(50) NOT NULL,
-                  username VARCHAR(25) NOT NULL UNIQUE,
-                  email VARCHAR(50) NOT NULL UNIQUE,
-                  password VARCHAR(255) NOT NULL,
-                  confirm VARCHAR(5),
-                  role VARCHAR(50) DEFAULT 'User' NOT NULL,
-                  token VARCHAR(255)
+              CREATE TABLE @chattable (
+                  MessageId INT PRIMARY KEY,
+                  SenderName VARCHAR(50),
+                  MessageContent VARCHAR(MAX),
+                  RoomId INT,
+                  Timestamp DATETIME,
+                  FOREIGN KEY (RoomId) REFERENCES @roomtable(RoomId)
               ); 
             ";
                     var createCmd = new SqlCommand(createTableQuery, connection);
+                    createCmd.Parameters.AddWithValue("@chattable", _chatTableName);
+                    createCmd.Parameters.AddWithValue("@roomtable", _roomTableName);
                     createCmd.ExecuteNonQuery();
                     Console.WriteLine("Table 'chat' created successfully.");
                 }
             }
         }
+
+        public async Task SaveMessage(Chat chat)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                await connection.OpenAsync();
+                var cmd = new SqlCommand(
+           $"INSERT INTO {_chatTableName} (SenderName, MessageContent, RoomId, Timestamp) VALUES (@SenderName, @MessageContent, @RoomId, @Timestamp)",
+           connection);
+                cmd.Parameters.AddWithValue("@SenderName", chat.senderUsername);
+                cmd.Parameters.AddWithValue("@MessageContent", chat.message);
+                cmd.Parameters.AddWithValue("@RoomId", chat.RoomID);
+                cmd.Parameters.AddWithValue("@Timestamp", chat.sentDate);
+
+                await cmd.ExecuteNonQueryAsync();
+            }
+        }
+
+        public async Task SaveRoom(Room room)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                await connection.OpenAsync();
+                var cmd = new SqlCommand(
+                    $"INSERT INTO {_roomTableName} (RoomOwnerUsername,OpenDate,ClosedDate,isAIassisted) VALUES (@RoomOwnerUsername, @OpenDate, @ClosedDate, @isai)",
+                    connection);
+                cmd.Parameters.AddWithValue("@RoomOwnerUsername", room.ownerName);
+                cmd.Parameters.AddWithValue("@OpenDate", room.OpenDate);
+                cmd.Parameters.AddWithValue("@ClosedDate", room.ClosedDate != null ? room.ClosedDate : DBNull.Value);
+                cmd.Parameters.AddWithValue("@isai", room.isAIassisted);
+
+                await cmd.ExecuteNonQueryAsync();
+            }
+        }
+
+        public async Task<Room> GetRoomByUser(string username)
+        {
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                await connection.OpenAsync();
+                string query = $"SELECT * FROM {_roomTableName} WHERE RoomOwnerUsername = @ownername";
+                using (SqlCommand cmd = new SqlCommand(query, connection))
+                {
+                    cmd.Parameters.AddWithValue("@ownername", username);
+                    using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            if (reader["ClosedDate"] != DBNull.Value)
+                            {
+                                Room room = new Room
+                                {
+                                    Id = (int)reader["RoomId"],
+                                    ownerName = (string)reader["RoomOwnerUsername"],
+                                    OpenDate = (DateTime)reader["OpenDate"],
+                                    isAIassisted = (int)reader["isAIassisted"]
+                                };
+
+                                room.messages = await GetMessagesByRoom(room.Id);
+
+                                return room;
+                            }
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        public async Task<List<Chat>> GetMessagesByRoom(int roomID)
+        {
+            List<Chat> messages = new List<Chat>();
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                await connection.OpenAsync();
+
+                string query = $"SELECT SenderName, MessageContent, RoomId, Timestamp FROM {_chatTableName} WHERE RoomId = @roomId";
+
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@roomId", roomID);
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            Chat message = new Chat
+                            {
+                                senderUsername = (string)reader["SenderName"],
+                                message = (string)reader["MessageContent"],
+                                sentDate = (DateTime)reader["Timestamp"]
+                            };
+
+                            messages.Add(message);
+                        }
+                    }
+                }
+            }
+
+            return messages;
+        }
+
     }
 }

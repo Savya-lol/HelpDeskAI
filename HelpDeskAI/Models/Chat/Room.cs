@@ -2,11 +2,20 @@
 {
     public class Room
     {
-        public int RoomID { get; set; }
-        public List<Chat> chats { get; set; }
-        public List<ChatUser> users { get; set; }
-        public bool isAIassisted { get; set; }
-        public string OpenDate { get; set; }
-        public string ClosedDate { get; set; }
+        public int Id { get; set; }
+        public List<Chat> messages { get; set; }
+        public int isAIassisted { get; set; } = 1;
+        public string ownerName { get; set; }
+        public DateTime OpenDate { get; set; }
+        public DateTime? ClosedDate { get; set; } = null;
+
+        public Room(string ownerName, DateTime OpenDate) 
+        {
+            this.ownerName = ownerName;
+            this.OpenDate = OpenDate;
+        }
+        public Room()
+        {
+        }
     }
 }

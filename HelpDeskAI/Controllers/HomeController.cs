@@ -9,8 +9,8 @@ namespace HelpDeskAI.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        private readonly ChatService _chatService;
-        public HomeController(ILogger<HomeController> logger, ChatService chatService)
+        private readonly ChatHub _chatService;
+        public HomeController(ILogger<HomeController> logger, ChatHub chatService)
         {
             _logger = logger;
             _chatService=chatService;
@@ -41,7 +41,7 @@ namespace HelpDeskAI.Controllers
         {
            if(model == null)
             {
-                if(model.isAIassisted)
+                if(model.isAIassisted == 1)
                 {
 
                 }

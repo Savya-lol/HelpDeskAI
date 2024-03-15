@@ -1,4 +1,5 @@
 ﻿using HelpDeskAI.Models.Auth;
+using HelpDeskAI.Models.Chat;
 
 namespace HelpDeskAI.Models
 {
@@ -7,9 +8,7 @@ namespace HelpDeskAI.Models
         public int id { get; set; }
         public string name {  get; set; }
         public string email { get; set; }
-
-
-        //constructor
+        public Room openChat { get; set; }
         public ChatUser(int id,string name, string email)
         {
             this.id = id;
@@ -18,9 +17,8 @@ namespace HelpDeskAI.Models
         }
 
         //Operator Overloading
-        public static explicit operator ChatUser(User user) { //to only get the required information
-            ChatUser chatUser = new ChatUser(user.Id,user.Username,user.Email);
-            return chatUser;
+        public static implicit operator ChatUser(User user) { //to only get the required information
+            return  new ChatUser(user.Id,user.Username,user.Email);
         }
     }
 }

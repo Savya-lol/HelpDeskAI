@@ -1,18 +1,23 @@
 ﻿using System;
 using System.Threading.Tasks;
+using HelpDeskAI.Models.Chat;
+using HelpDeskAI.Models;
 using Microsoft.Extensions.Options;
 using OpenAI_API;
 using OpenAI_API.Completions;
 
 namespace HelpDeskAI.Services
 {
-	public class ChatService
+	public class ChatHub
 	{
 		private readonly OpenAIAPI _openAIAPI;
+		private readonly ChatDataAccess _chatDataAccess;
 
-		public ChatService(string apiKey)
+
+        public ChatHub(string apiKey,ChatDataAccess chatDataAccess)
 		{
 			_openAIAPI = new OpenAIAPI(apiKey);
+			_chatDataAccess = chatDataAccess;
 		}
 
 		public async Task<string> GetAIResponseAsync(string prompt)
@@ -32,6 +37,13 @@ namespace HelpDeskAI.Services
 
 			return completion.Completions[0].Text;
 		}
-	}
+
+        public async Task CreateRoom(ChatUser owner)
+        {
+            Room room = new Room(owner.name, DateTime.Now);
+            owner.openChat = room;
+            await _chatDataAccess.SaveRoom(room);
+        }
+    }
 }
 

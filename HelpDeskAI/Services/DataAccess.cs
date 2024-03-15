@@ -11,32 +11,6 @@ namespace HelpDeskAI.Services
             _connectionString = connectionString;
         }
 
-        public object GetValueFromTable(string tableName, string columnName, string whereClause)
-        {
-            using (var connection = new SqlConnection(_connectionString))
-            {
-                connection.Open();
-                string query = $"SELECT {columnName} FROM {tableName} WHERE {whereClause}";
-                using (var cmd = new SqlCommand(query, connection))
-                {
-                    return cmd.ExecuteScalar();
-                }
-            }
-        }
-
-        public object ExecuteScalarCommand(string query, params SqlParameter[] parameters)
-        {
-            using (var connection = new SqlConnection(_connectionString))
-            {
-                connection.Open();
-                using (var cmd = new SqlCommand(query, connection))
-                {
-                    cmd.Parameters.AddRange(parameters);
-                    return cmd.ExecuteScalar();
-                }
-            }
-        }
-
         public void UpdateSpecific(string table, string condition, string identifier, string query, object value)
         {
             using (SqlConnection connection = new SqlConnection(_connectionString))
