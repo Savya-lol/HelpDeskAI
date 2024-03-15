@@ -63,6 +63,7 @@ namespace HelpDeskAI.Controllers
                     {
                         var claims = new List<Claim>
                     {
+                        new Claim(ClaimTypes.Name, _userDataAccess.GetUserByEmail(email).Username),
                         new Claim(ClaimTypes.Email, email),
                         new Claim(ClaimTypes.Role, _userDataAccess.GetSpecific<string>(_userDataAccess._userTableName,"role","email",email))
                     };
@@ -188,10 +189,11 @@ namespace HelpDeskAI.Controllers
             return RedirectToAction("Verify", "Auth", new { email = user.Email });
         }
 
-        public IActionResult SendVerificationEmail(User user)
+        public IActionResult SendVerificationEmail(RequestEmailModel user)
         {
             if (!ModelState.IsValid)
             {
+                Debug.WriteLine("Invalid Model");
                 return RedirectToAction("RequestEmail");
             }
             User retrievedUser = _userDataAccess.GetUserByEmail(user.Email);
@@ -203,9 +205,10 @@ namespace HelpDeskAI.Controllers
 
             if (retrievedUser.IsConfirmed == "True")
             {
-                return SendResetEmail(user);
+                return SendResetEmail(_userDataAccess.GetUserByEmail(user.Email));
             }
-            return SendConfirmationEmail(user);
+            Debug.WriteLine("Sent Confirmation");
+            return SendConfirmationEmail(_userDataAccess.GetUserByEmail(user.Email));
         }
 
         public IActionResult SendResetEmail(User user)

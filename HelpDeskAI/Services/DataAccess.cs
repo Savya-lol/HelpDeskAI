@@ -17,11 +17,12 @@ namespace HelpDeskAI.Services
             {
                 connection.Open();
 
-                string updateQuery = $"UPDATE @table SET {query} = @value WHERE {condition} = @identifier";
+                string updateQuery = $"UPDATE {table} SET {query} = @value WHERE {condition} = @identifier";
                 using (SqlCommand cmd = new SqlCommand(updateQuery, connection))
                 {
                     cmd.Parameters.AddWithValue("@identifier", identifier);
-                    cmd.Parameters.AddWithValue("@table", table);
+
+                    // No need for @table parameter here
 
                     if (value != null)
                     {

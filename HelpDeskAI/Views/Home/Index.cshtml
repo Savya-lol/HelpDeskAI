@@ -1,45 +1,23 @@
 ﻿@using System.Security.Claims
+@using HelpDeskAI.Models.Chat
 @{
     ViewData["Title"] = "Chat";
     var logged_in_email = User.FindFirstValue(ClaimTypes.Email);
 }
-
 <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 
 <div class="chat-body">
    
     <div id="chat-container">
         <div id="chat-messages">
-            <div class="message user-message">Hello, how are you?</div>
-            <div class="message other-message">Hi! I'm good, thanks for asking.</div>
-            <!-- Add more messages here -->
         </div>
         <div id="input-container">
             <input type="text" id="message-input" placeholder="Type your message...">
-            <button id="send-button" onclick="sendMessage()">Send</button>
+            <input type="hidden" id="user" value="@User.FindFirstValue(ClaimTypes.Name)"/>
+            <button id="send-button">Send</button>
         </div>
     </div>
-    <script>
-        function sendMessage() {
-            var input = document.getElementById("message-input");
-            var message = input.value;
-
-            if (message.trim() !== "") {
-                var chatMessages = document.getElementById("chat-messages");
-
-                var userMessage = document.createElement("div");
-                userMessage.className = "message user-message";
-                userMessage.textContent = message;
-
-                chatMessages.appendChild(userMessage);
-
-                // Clear the input field after sending the message
-                input.value = "";
-
-                // Scroll to the bottom of the chat messages
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-        }
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
+    <script src="~/js/chat.js"></script>
 
 </div>

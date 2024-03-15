@@ -1,12 +1,11 @@
 using HelpDeskAI.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.Extensions.DependencyInjection;
-using OpenAI_API;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsettings.json", true).AddEnvironmentVariables().Build();
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddSignalR();
 
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -25,7 +24,7 @@ builder.Services.AddScoped<ChatDataAccess>(
 builder.Services.AddScoped<MailService>(
     provider => new MailService(config.GetValue<string>("Smtp-Server"), config.GetValue<int>("Smtp-Port"), config.GetValue<string>("Smtp-Username"), config.GetValue<string>("Smtp-Password")));
 builder.Services.AddScoped<ChatHub>(
-    provider => new ChatHub(config.GetValue<string>("Openai-Apikey"), provider.GetRequiredService<ChatDataAccess>()));
+    provider => new ChatHub(config.GetValue<string>("Openai-Apikey"), provider.GetRequiredService<ChatDataAccess>(), provider.GetRequiredService<UserDataAccess>()));
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -46,5 +45,6 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+app.MapHub<ChatHub>("/chatHub");
 
 app.Run();
