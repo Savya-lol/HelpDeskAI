@@ -24,7 +24,7 @@ builder.Services.AddScoped<ChatDataAccess>(
 builder.Services.AddScoped<MailService>(
     provider => new MailService(config.GetValue<string>("Smtp-Server"), config.GetValue<int>("Smtp-Port"), config.GetValue<string>("Smtp-Username"), config.GetValue<string>("Smtp-Password")));
 builder.Services.AddScoped<ChatHub>(
-    provider => new ChatHub(config.GetValue<string>("Openai-Apikey"), provider.GetRequiredService<ChatDataAccess>(), provider.GetRequiredService<UserDataAccess>()));
+    provider => new ChatHub(config.GetValue<string>("Openai-Apikey"), provider.GetRequiredService<ChatDataAccess>()));
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
