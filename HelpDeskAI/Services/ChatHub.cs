@@ -12,12 +12,10 @@ namespace HelpDeskAI.Services
 	{
 		private readonly OpenAIAPI _openAIAPI;
 		private readonly ChatDataAccess _chatDataAccess;
-        private readonly UserDataAccess _userDataAccess;
-        public ChatHub(string apiKey,ChatDataAccess chatDataAccess, UserDataAccess userDataAccess)
+        public ChatHub(string apiKey,ChatDataAccess chatDataAccess)
 		{
 			_openAIAPI = new OpenAIAPI(apiKey);
 			_chatDataAccess = chatDataAccess;
-			_userDataAccess = userDataAccess;
 		}
 
         public override async Task OnConnectedAsync()
