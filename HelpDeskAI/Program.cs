@@ -1,6 +1,7 @@
 using HelpDeskAI.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.DependencyInjection;
+using OpenAI_API;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsettings.json", true).AddEnvironmentVariables().Build();
@@ -18,10 +19,11 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.AccessDeniedPath = "/Home/AccessDenied";
     });
 builder.Services.AddScoped<UserDataAccess>(
-    provider => new UserDataAccess(config.GetValue<string>("DBConnectionString")));
+    provider => new UserDataAccess(config.GetValue<string>("DBConnectionString"), config.GetValue<string>("UserTableName")));
 builder.Services.AddScoped<MailService>(
     provider => new MailService(config.GetValue<string>("Smtp-Server"), config.GetValue<int>("Smtp-Port"), config.GetValue<string>("Smtp-Username"), config.GetValue<string>("Smtp-Password")));
-
+builder.Services.AddScoped<ChatService>(
+    provider => new ChatService(config.GetValue<string>("Openai-Apikey")));
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

@@ -1,17 +1,16 @@
 ﻿using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Web.Helpers;
-using HelpDeskAI.Models;
+using HelpDeskAI.Models.Auth;
 
 namespace HelpDeskAI.Services
 {
-    public class UserDataAccess
+    public class UserDataAccess : DataAccess
     {
-        public readonly string _connectionString;
-
-        public UserDataAccess(string connectionString)
+        public readonly string _userTableName;
+        public UserDataAccess(string connectionString, string userTableName) : base(connectionString)
         {
-            _connectionString = connectionString;
+            _userTableName = userTableName;
             CheckAndCreateUsersTable();
         }
 
@@ -22,17 +21,18 @@ namespace HelpDeskAI.Services
                 connection.Open();
 
                 var cmd = new SqlCommand(
-                   @"SELECT COUNT(*) 
+                    @"SELECT COUNT(*) 
             FROM INFORMATION_SCHEMA.TABLES 
             WHERE TABLE_SCHEMA = 'dbo' 
-            AND TABLE_NAME = 'users'", connection);
+            AND TABLE_NAME = @usertable", connection);
+                cmd.Parameters.AddWithValue("@usertable", _userTableName);
 
                 int tableExists = (int)cmd.ExecuteScalar();
 
                 if (tableExists == 0)
                 {
                     string createTableQuery = @"
-              CREATE TABLE users (
+              CREATE TABLE @usertable (
                   id INT PRIMARY KEY IDENTITY(1,1),
                   first_name VARCHAR(50) NOT NULL,
                   last_name VARCHAR(50) NOT NULL,
@@ -45,21 +45,9 @@ namespace HelpDeskAI.Services
               ); 
             ";
                     var createCmd = new SqlCommand(createTableQuery, connection);
+                    createCmd.Parameters.AddWithValue("@usertable", _userTableName);
                     createCmd.ExecuteNonQuery();
                     Console.WriteLine("Table 'users' created successfully.");
-                }
-            }
-        }
-
-        public object GetValueFromTable(string tableName, string columnName, string whereClause)
-        {
-            using (var connection = new SqlConnection(_connectionString))
-            {
-                connection.Open();
-                string query = $"SELECT {columnName} FROM {tableName} WHERE {whereClause}";
-                using (var cmd = new SqlCommand(query, connection))
-                {
-                    return cmd.ExecuteScalar();
                 }
             }
         }
@@ -112,21 +100,6 @@ namespace HelpDeskAI.Services
                 }
             }
         }
-
-
-        public object ExecuteScalarCommand(string query, params SqlParameter[] parameters)
-        {
-            using (var connection = new SqlConnection(_connectionString))
-            {
-                connection.Open();
-                using (var cmd = new SqlCommand(query, connection))
-                {
-                    cmd.Parameters.AddRange(parameters);
-                    return cmd.ExecuteScalar();
-                }
-            }
-        }
-
 
         public User GetUserByConfirmationToken(string token)
         {
@@ -200,69 +173,20 @@ namespace HelpDeskAI.Services
 
         public void ConfirmUserEmail(User user)
         {
-            UpdateSpecific("email", user.Email, "confirm", "True");
-            UpdateSpecific("email", user.Email, "token", null);
+            UpdateSpecific(_userTableName, "email", user.Email, "confirm", "True");
+            UpdateSpecific(_userTableName, "email", user.Email, "token", null);
         }
 
         public void UpdateUserPassword(string email, string newPassword)
         {
             string hashedPassword = Crypto.HashPassword(newPassword);
-            UpdateSpecific("email", email, "password", hashedPassword);
-            UpdateSpecific("email", email, "token", null);
+            UpdateSpecific(_userTableName, "email", email, "password", hashedPassword);
+            UpdateSpecific(_userTableName, "email", email, "token", null);
         }
 
         public void UpdateUserToken(User user)
         {
-            UpdateSpecific("email", user.Email, "token", user.ConfirmationToken);
-    }
-
-        public void UpdateSpecific(string condition, string identifier, string query, object value)
-        {
-            using (SqlConnection connection = new SqlConnection(_connectionString))
-            {
-                connection.Open();
-
-                string updateQuery = $"UPDATE users SET {query} = @value WHERE {condition} = @identifier";
-                using (SqlCommand cmd = new SqlCommand(updateQuery, connection))
-                {
-                    cmd.Parameters.AddWithValue("@identifier", identifier);
-
-                    if (value != null)
-                    {
-                        cmd.Parameters.AddWithValue("@value", value);
-                    }
-                    else
-                    {
-                        cmd.Parameters.AddWithValue("@value", DBNull.Value);
-                    }
-
-                    cmd.ExecuteNonQuery();
-                }
-            }
-        }
-
-        public T GetSpecific<T>(string column_name, string identifier,string condition)
-        {
-            using (SqlConnection connection = new SqlConnection(_connectionString))
-            {
-                connection.Open();
-
-                string query = $"SELECT {column_name} FROM users WHERE {identifier} = @condition";
-                using (SqlCommand cmd = new SqlCommand(query, connection))
-                {
-                    cmd.Parameters.AddWithValue("@condition", condition);
-
-                    using (SqlDataReader reader = cmd.ExecuteReader())
-                    {
-                        if (reader.HasRows)
-                        {
-                            reader.Read();
-                            return (T)reader.GetValue(0);
-                        }
-                    }
-                }
-                return default(T);
-            }
-        }
+            UpdateSpecific(_userTableName,"email", user.Email, "token", user.ConfirmationToken);
+         }
     }
 }

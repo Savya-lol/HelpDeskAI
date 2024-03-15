@@ -1,4 +1,4 @@
-﻿using HelpDeskAI.Models;
+﻿using HelpDeskAI.Models.Auth;
 using HelpDeskAI.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -63,12 +63,12 @@ namespace HelpDeskAI.Controllers
             {
                 if (Verify(email, password))
                 {
-                    if (_userDataAccess.GetSpecific<String>("confirm", "email", email) == "True")
+                    if (_userDataAccess.GetSpecific<String>(_userDataAccess._userTableName,"confirm", "email", email) == "True")
                     {
                         var claims = new List<Claim>
                     {
                         new Claim(ClaimTypes.Email, email),
-                        new Claim(ClaimTypes.Role, _userDataAccess.GetSpecific<string>("role","email",email))
+                        new Claim(ClaimTypes.Role, _userDataAccess.GetSpecific<string>(_userDataAccess._userTableName,"role","email",email))
                     };
 
                         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -83,7 +83,7 @@ namespace HelpDeskAI.Controllers
                 }
                 else
                 {
-                    ModelState.AddModelError("", "Invalid email or password or unverified account.");
+                    ModelState.AddModelError("", "Invalid email or password");
                 }
             }
             return View();
@@ -215,7 +215,7 @@ namespace HelpDeskAI.Controllers
         public IActionResult SendResetEmail(User user)
         {
             user.ConfirmationToken = Guid.NewGuid().ToString();
-            _userDataAccess.UpdateSpecific("email", user.Email, "token", user.ConfirmationToken);
+            _userDataAccess.UpdateSpecific(_userDataAccess._userTableName, "email", user.Email, "token", user.ConfirmationToken);
 
             string resetLink = Url.Action(
                 "ConfirmEmail", "Auth", new { token = user.ConfirmationToken, resetpass = "True" }, Request.Scheme);

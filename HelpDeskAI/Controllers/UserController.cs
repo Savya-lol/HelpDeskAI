@@ -1,4 +1,4 @@
-﻿using HelpDeskAI.Models;
+﻿using HelpDeskAI.Models.Auth;
 using HelpDeskAI.Services;
 using Microsoft.AspNetCore.Mvc;
 

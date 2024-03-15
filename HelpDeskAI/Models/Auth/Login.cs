@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace HelpDeskAI.Models
+namespace HelpDeskAI.Models.Auth
 {
     public class Login
     {

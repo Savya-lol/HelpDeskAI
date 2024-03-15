@@ -1,13 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace HelpDeskAI.Models
+namespace HelpDeskAI.Models.Auth
 {
     public class User
     {
         public int Id { get; set; }
 
         [Required]
-        [MaxLength(50,ErrorMessage ="First Name too long")]
+        [MaxLength(50, ErrorMessage = "First Name too long")]
         public string FirstName { get; set; }
         [Required]
         [MaxLength(50, ErrorMessage = "Last Name too long")]
