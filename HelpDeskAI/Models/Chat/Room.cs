@@ -5,6 +5,7 @@
         public int Id { get; set; }
         public List<Chat> messages { get; set; }
         public int isAIassisted { get; set; } = 1;
+        public int isOpen { get; set; } = 1;
         public string ownerName { get; set; }
         public DateTime OpenDate { get; set; }
         public DateTime? ClosedDate { get; set; } = null;

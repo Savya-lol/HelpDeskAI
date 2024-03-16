@@ -19,6 +19,7 @@ connection.on("ReceiveMessage", function (user, message) {
 
     messageElement.innerHTML = `<strong>${user}</strong>: ${message}`;
     messageContainer.appendChild(messageElement);
+    scrollToBottom();
 });
 
 connection.start().then(function () {
@@ -31,14 +32,46 @@ document.getElementById("send-button").addEventListener("click", function (event
     var user = document.getElementById("user").value;
     var message = document.getElementById("message-input").value;
 
-    // Use the stored room information when sending a message
-    connection.invoke("SendMessage", user, message, currentRoom).catch(function (err) {
-        return console.error(err.toString());
-    });
+    console.log("Message:", message); // Debug log
+    if (message.trim() != "") {
 
-    event.preventDefault();
-    document.getElementById("message-input").value = "";
+        connection.invoke("SendMessage", user, message, currentRoom).catch(function (err) {
+            return console.error(err.toString());
+        });
+    }
+
+        event.preventDefault();
+        document.getElementById("message-input").value = "";
 });
 connection.on("SetCurrentRoom", function (room) {
     currentRoom = room;
 });
+
+connection.on("RenderOldMessages", function (oldMessages) {
+    var messageContainer = document.getElementById("chat-messages");
+
+    // Render each old message in the container
+    oldMessages.forEach(function (message) {
+        var messageContainer = document.getElementById("chat-messages");
+        var messageElement = document.createElement("div");
+        var currentUser = document.getElementById("user").value;
+        // Check if the received message is from the current room
+        if (message.senderUsername === currentUser) {
+            messageElement.classList.add("message", "user-message");
+        } else {
+            messageElement.classList.add("message", "other-message");
+        }
+
+        messageElement.innerHTML = `<strong>${message.senderUsername}</strong>: ${message.message}`;
+        messageContainer.appendChild(messageElement);
+        scrollToBottom();
+    });
+});
+
+function scrollToBottom() {
+    var chatContainer = document.getElementById("chat-messages");
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+
+

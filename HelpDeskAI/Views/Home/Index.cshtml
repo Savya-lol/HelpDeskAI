@@ -12,7 +12,7 @@
         <div id="chat-messages">
         </div>
         <div id="input-container">
-            <input type="text" id="message-input" placeholder="Type your message...">
+            <input type="text" id="message-input" autocomplete="off" placeholder="Type your message...">
             <input type="hidden" id="user" value="@User.FindFirstValue(ClaimTypes.Name)"/>
             <button id="send-button">Send</button>
         </div>

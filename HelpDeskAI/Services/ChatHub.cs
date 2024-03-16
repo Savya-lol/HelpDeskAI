@@ -22,7 +22,7 @@ namespace HelpDeskAI.Services
         {
 			Debug.WriteLine("SignalR Connected! ID:"+ Context.ConnectionId);
             //await JoinRoom(_userDataAccess.GetUserByEmail(Context.User.FindFirstValue(ClaimTypes.Email)));
-            await JoinRoom(new ChatUser(0,"savya","mail@savya.com.np"));
+            await JoinRoom(new ChatUser(0,"savya","tropedotuber@gmail.com"));
             await base.OnConnectedAsync();
         }
 
@@ -46,21 +46,39 @@ namespace HelpDeskAI.Services
 		}
 
          public async Task SendMessage(string user, string message, string room)
-        {
-            await Clients.Group(room).SendAsync("ReceiveMessage", user, message);
-			Debug.WriteLine($"{room} message: {message}");
+		{
+            Room roomObj = await _chatDataAccess.GetRoomByUser(room);
+            if (roomObj != null)
+            {
+                int roomId = roomObj.Id;
+                Debug.WriteLine($"{roomId}");
+                await Clients.Group(room).SendAsync("ReceiveMessage", user, message, room);
+                await _chatDataAccess.SaveMessage(new Chat(message, DateTime.Now, user, roomId));
+                Debug.WriteLine($"{room} message: {message}");
+            }
+            else
+            {
+                // Handle the case where the room doesn't exist for the user
+                Debug.WriteLine($"Room not found for user: {user}");
+            }
         }
 
         public async Task<Room> JoinRoom(ChatUser owner)
 		{
-			if(_chatDataAccess.GetRoomByUser(owner.name) == null)
-			{
-				await CreateRoom(owner);
-			}
+			Room room = await _chatDataAccess.GetRoomByUser(owner.name);
+
+
+            if (room == null)
+            {
+                room = await CreateRoom(owner);
+            }
 
             await Groups.AddToGroupAsync(Context.ConnectionId, owner.name);
 			Debug.WriteLine($"Joined Room: {owner.name}");
             await Clients.Caller.SendAsync("SetCurrentRoom", owner.name);
+            room.messages = await _chatDataAccess.GetMessagesByRoom(room.Id);
+            if(room.messages != null)
+                await Clients.Caller.SendAsync("RenderOldMessages", room.messages);
             return await _chatDataAccess.GetRoomByUser(owner.name);
         }
 
@@ -75,10 +93,10 @@ namespace HelpDeskAI.Services
         public async Task<Room> CreateRoom(ChatUser owner)
         {
             Room room = new Room(owner.name, DateTime.Now);
-            await _chatDataAccess.SaveRoom(room);
             await Clients.Caller.SendAsync("SetCurrentRoom", owner.name);
             await Groups.AddToGroupAsync(Context.ConnectionId, owner.name);
-			return room;
+            await _chatDataAccess.SaveRoom(room);
+            return room;
         }
     }
 }

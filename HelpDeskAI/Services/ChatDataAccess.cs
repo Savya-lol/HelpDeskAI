@@ -36,7 +36,8 @@ namespace HelpDeskAI.Services
                     CREATE TABLE {_roomTableName} (
                     RoomId INT IDENTITY(1,1) PRIMARY KEY,
                     OpenDate DATETIME,
-                    ClosedDate DATETIME DEFAULT NULL,
+                    ClosedDate DATETIME,
+                    isOpen INT,
                     isAIassisted INT,
                     RoomOwnerUsername VARCHAR(50)
               ); 
@@ -66,7 +67,7 @@ namespace HelpDeskAI.Services
                 {
                     string createTableQuery = $@"
                 CREATE TABLE {_chatTableName} (
-                    MessageId INT PRIMARY KEY,
+                    MessageId INT IDENTITY(1,1) PRIMARY KEY,
                     SenderName VARCHAR(50),
                     MessageContent VARCHAR(MAX),
                     RoomId INT,
@@ -110,38 +111,42 @@ namespace HelpDeskAI.Services
                 if (roomExists)
                 {
                     var updateCmd = new SqlCommand(
-                        $"UPDATE {_roomTableName} SET RoomOwnerUsername = @RoomOwnerUsername, OpenDate = @OpenDate, ClosedDate = @ClosedDate, isAIassisted = @isai WHERE RoomId = @id",
+                        $"UPDATE {_roomTableName} SET RoomOwnerUsername = @RoomOwnerUsername, OpenDate = @OpenDate, isAIassisted = @isai, isOpen = @isopen {(room.ClosedDate != null ? ", ClosedDate = @ClosedDate" : "")} WHERE RoomId = @id",
                         connection);
                     updateCmd.Parameters.AddWithValue("@RoomOwnerUsername", room.ownerName);
                     updateCmd.Parameters.AddWithValue("@OpenDate", room.OpenDate);
-                    updateCmd.Parameters.AddWithValue("@ClosedDate", room.ClosedDate != null ? room.ClosedDate : DBNull.Value);
                     updateCmd.Parameters.AddWithValue("@isai", room.isAIassisted);
                     updateCmd.Parameters.AddWithValue("@id", room.Id);
-
+                    updateCmd.Parameters.AddWithValue("@isopen", room.isOpen);
+                    if (room.ClosedDate != null)
+                    {
+                        updateCmd.Parameters.AddWithValue("@ClosedDate", room.ClosedDate);
+                    }
                     await updateCmd.ExecuteNonQueryAsync();
                 }
                 else
                 {
                     var insertCmd = new SqlCommand(
-                        $"INSERT INTO {_roomTableName} (RoomId, RoomOwnerUsername, OpenDate, ClosedDate, isAIassisted) VALUES (@id, @RoomOwnerUsername, @OpenDate, @ClosedDate, @isai)",
+                        $"INSERT INTO {_roomTableName} (RoomOwnerUsername, OpenDate, ClosedDate, isAIassisted, isOpen) VALUES (@RoomOwnerUsername, @OpenDate, @ClosedDate, @isai, @isopen)",
                         connection);
-                    insertCmd.Parameters.AddWithValue("@id", room.Id);
                     insertCmd.Parameters.AddWithValue("@RoomOwnerUsername", room.ownerName);
                     insertCmd.Parameters.AddWithValue("@OpenDate", room.OpenDate);
-                    insertCmd.Parameters.AddWithValue("@ClosedDate", room.ClosedDate != null ? room.ClosedDate : DBNull.Value);
+                    insertCmd.Parameters.AddWithValue("@ClosedDate", (object)room.ClosedDate ?? DBNull.Value);
                     insertCmd.Parameters.AddWithValue("@isai", room.isAIassisted);
+                    insertCmd.Parameters.AddWithValue("@isopen", room.isOpen);
 
                     await insertCmd.ExecuteNonQueryAsync();
                 }
             }
         }
 
+
         public async Task<Room> GetRoomByUser(string username)
         {
             using (SqlConnection connection = new SqlConnection(_connectionString))
             {
                 await connection.OpenAsync();
-                string query = $"SELECT * FROM {_roomTableName} WHERE RoomOwnerUsername = @ownername";
+                string query = $"SELECT RoomId, RoomOwnerUsername, OpenDate, ClosedDate, isAIassisted FROM {_roomTableName} WHERE RoomOwnerUsername = @ownername";
                 using (SqlCommand cmd = new SqlCommand(query, connection))
                 {
                     cmd.Parameters.AddWithValue("@ownername", username);
@@ -149,26 +154,33 @@ namespace HelpDeskAI.Services
                     {
                         while (await reader.ReadAsync())
                         {
+                            Room room = new Room
+                            {
+                                Id = (int)reader["RoomId"],
+                                ownerName = (string)reader["RoomOwnerUsername"],
+                                OpenDate = (DateTime)reader["OpenDate"],
+                                isAIassisted = (int)reader["isAIassisted"]
+                            };
+
                             if (reader["ClosedDate"] != DBNull.Value)
                             {
-                                Room room = new Room
-                                {
-                                    Id = (int)reader["RoomId"],
-                                    ownerName = (string)reader["RoomOwnerUsername"],
-                                    OpenDate = (DateTime)reader["OpenDate"],
-                                    isAIassisted = (int)reader["isAIassisted"]
-                                };
-
-                                room.messages = await GetMessagesByRoom(room.Id);
-
-                                return room;
+                                room.ClosedDate = (DateTime)reader["ClosedDate"];
                             }
+                            else
+                            {
+                                room.ClosedDate = null; 
+                            }
+
+                            room.messages = await GetMessagesByRoom(room.Id);
+
+                            return room;
                         }
                     }
                 }
             }
             return null;
         }
+
 
         public async Task<List<Chat>> GetMessagesByRoom(int roomID)
         {
