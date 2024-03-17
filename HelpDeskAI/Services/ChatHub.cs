@@ -1,14 +1,7 @@
-﻿using HelpDeskAI.Models.Chat;
-using HelpDeskAI.Models;
-using OpenAI_API;
-using OpenAI_API.Completions;
+﻿using HelpDeskAI.Models;
+using HelpDeskAI.Models.Chat;
 using Microsoft.AspNetCore.SignalR;
-using System.Security.Claims;
 using System.Diagnostics;
-using Newtonsoft.Json;
-using System.Net.Http.Headers;
-using System.Text;
-using Newtonsoft.Json.Linq;
 
 namespace HelpDeskAI.Services
 {
@@ -31,11 +24,11 @@ namespace HelpDeskAI.Services
         }
 
         public async Task SendMessage(string user, string message, string room)
-		{
+        {
             Room roomObj = await _chatDataAccess.GetRoomByUser(room);
             if (roomObj != null)
             {
-                if (roomObj.isAIassisted !=1)
+                if (roomObj.isAIassisted != 1)
                 {
                     int roomId = roomObj.Id;
                     Debug.WriteLine($"{roomId}");
@@ -61,8 +54,8 @@ namespace HelpDeskAI.Services
         }
 
         public async Task<Room> JoinRoom(ChatUser owner)
-		{
-			Room room = await _chatDataAccess.GetRoomByUser(owner.name);
+        {
+            Room room = await _chatDataAccess.GetRoomByUser(owner.name);
 
 
             if (room == null)
@@ -71,21 +64,21 @@ namespace HelpDeskAI.Services
             }
 
             await Groups.AddToGroupAsync(Context.ConnectionId, owner.name);
-			Debug.WriteLine($"Joined Room: {owner.name}");
+            Debug.WriteLine($"Joined Room: {owner.name}");
             await Clients.Caller.SendAsync("SetCurrentRoom", owner.name);
             room.messages = await _chatDataAccess.GetMessagesByRoom(room.Id);
-            if(room.messages != null)
+            if (room.messages != null)
                 await Clients.Caller.SendAsync("RenderOldMessages", room.messages);
             return await _chatDataAccess.GetRoomByUser(owner.name);
         }
 
         public async Task CloseRoom(ChatUser owner)
-		{
-			Room room = await _chatDataAccess.GetRoomByUser(owner.name);
-			room.ClosedDate = DateTime.Now;
-			await _chatDataAccess.SaveRoom(room);
-			await Groups.RemoveFromGroupAsync(Context.ConnectionId,owner.name);
-		}
+        {
+            Room room = await _chatDataAccess.GetRoomByUser(owner.name);
+            room.ClosedDate = DateTime.Now;
+            await _chatDataAccess.SaveRoom(room);
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, owner.name);
+        }
 
         public async Task<Room> CreateRoom(ChatUser owner)
         {
