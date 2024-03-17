@@ -5,56 +5,53 @@ using OpenAI_API.Completions;
 using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 using System.Diagnostics;
+using Newtonsoft.Json;
+using System.Net.Http.Headers;
+using System.Text;
+using Newtonsoft.Json.Linq;
 
 namespace HelpDeskAI.Services
 {
-	public class ChatHub:Hub
-	{
-		private readonly OpenAIAPI _openAIAPI;
-		private readonly ChatDataAccess _chatDataAccess;
-        public ChatHub(string apiKey,ChatDataAccess chatDataAccess)
-		{
-			_openAIAPI = new OpenAIAPI(apiKey);
-			_chatDataAccess = chatDataAccess;
-		}
+    public class ChatHub : Hub
+    {
+        private readonly GeminiService geminiService;
+        private readonly ChatDataAccess _chatDataAccess;
+        public ChatHub(string apiKey, ChatDataAccess chatDataAccess)
+        {
+            geminiService = new GeminiService(apiKey);
+            _chatDataAccess = chatDataAccess;
+        }
 
         public override async Task OnConnectedAsync()
         {
-			Debug.WriteLine("SignalR Connected! ID:"+ Context.ConnectionId);
+            Debug.WriteLine("SignalR Connected! ID:" + Context.ConnectionId);
             //await JoinRoom(_userDataAccess.GetUserByEmail(Context.User.FindFirstValue(ClaimTypes.Email)));
-            await JoinRoom(new ChatUser(0,"savya","tropedotuber@gmail.com"));
+            await JoinRoom(new ChatUser(0, "savya", "tropedotuber@gmail.com"));
             await base.OnConnectedAsync();
         }
 
-
-        public async Task<string> GetAIResponseAsync(string prompt)
-		{
-			if (string.IsNullOrEmpty(prompt))
-			{
-				throw new ArgumentException("Prompt cannot be empty.");
-			}
-
-			var completionRequest = new CompletionRequest
-			{
-				Prompt = prompt,
-				Model = "text-davinci-003"
-			};
-
-			var completion = await _openAIAPI.Completions.CreateCompletionAsync(completionRequest);
-
-			return completion.Completions[0].Text;
-		}
-
-         public async Task SendMessage(string user, string message, string room)
+        public async Task SendMessage(string user, string message, string room)
 		{
             Room roomObj = await _chatDataAccess.GetRoomByUser(room);
             if (roomObj != null)
             {
-                int roomId = roomObj.Id;
-                Debug.WriteLine($"{roomId}");
-                await Clients.Group(room).SendAsync("ReceiveMessage", user, message, room);
-                await _chatDataAccess.SaveMessage(new Chat(message, DateTime.Now, user, roomId));
-                Debug.WriteLine($"{room} message: {message}");
+                if (roomObj.isAIassisted !=1)
+                {
+                    int roomId = roomObj.Id;
+                    Debug.WriteLine($"{roomId}");
+                    await Clients.Group(room).SendAsync("ReceiveMessage", user, message, room);
+                    await _chatDataAccess.SaveMessage(new Chat(message, DateTime.Now, user, roomId));
+                    Debug.WriteLine($"{room} message: {message}");
+                }
+                else
+                {
+                    int roomId = roomObj.Id;
+                    await Clients.Group(room).SendAsync("ReceiveMessage", user, message, room);
+                    await _chatDataAccess.SaveMessage(new Chat(message, DateTime.Now, user, roomId));
+                    string AIresponse = await geminiService.GetAIResponseAsync(message);
+                    await Clients.Group(room).SendAsync("ReceiveMessage", "Support Bot", AIresponse, room);
+                    await _chatDataAccess.SaveMessage(new Chat(AIresponse, DateTime.Now, "Support Bot", roomId));
+                }
             }
             else
             {
