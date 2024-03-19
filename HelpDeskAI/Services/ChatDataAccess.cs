@@ -33,21 +33,22 @@ namespace HelpDeskAI.Services
                 if (tableExists == 0)
                 {
                     string createTableQuery = $@"
-                    CREATE TABLE {_roomTableName} (
+                CREATE TABLE {_roomTableName} (
                     RoomId INT IDENTITY(1,1) PRIMARY KEY,
                     OpenDate DATETIME,
                     ClosedDate DATETIME,
                     isOpen INT,
                     isAIassisted INT,
                     RoomOwnerUsername VARCHAR(50)
-              ); 
+                ); 
             ";
                     var createCmd = new SqlCommand(createTableQuery, connection);
                     createCmd.ExecuteNonQuery();
-                    Console.WriteLine("Table 'room' created successfully.");
+                    Console.WriteLine($"Table '{_roomTableName}' created successfully.");
                 }
             }
         }
+
 
         private void CheckAndCreateChatTable()
         {

@@ -31,23 +31,22 @@ namespace HelpDeskAI.Services
 
                 if (tableExists == 0)
                 {
-                    string createTableQuery = @"
-              CREATE TABLE @usertable (
-                  id INT PRIMARY KEY IDENTITY(1,1),
-                  first_name VARCHAR(50) NOT NULL,
-                  last_name VARCHAR(50) NOT NULL,
-                  username VARCHAR(25) NOT NULL UNIQUE,
-                  email VARCHAR(50) NOT NULL UNIQUE,
-                  password VARCHAR(255) NOT NULL,
-                  confirm VARCHAR(5),
-                  role VARCHAR(50) DEFAULT 'User' NOT NULL,
-                  token VARCHAR(255)
-              ); 
+                    string createTableQuery = $@"
+                CREATE TABLE {_userTableName} (
+                    id INT PRIMARY KEY IDENTITY(1,1),
+                    first_name VARCHAR(50) NOT NULL,
+                    last_name VARCHAR(50) NOT NULL,
+                    username VARCHAR(25) NOT NULL UNIQUE,
+                    email VARCHAR(50) NOT NULL UNIQUE,
+                    password VARCHAR(255) NOT NULL,
+                    confirm VARCHAR(5),
+                    role VARCHAR(50) DEFAULT 'User' NOT NULL,
+                    token VARCHAR(255)
+                ); 
             ";
                     var createCmd = new SqlCommand(createTableQuery, connection);
-                    createCmd.Parameters.AddWithValue("@usertable", _userTableName);
                     createCmd.ExecuteNonQuery();
-                    Console.WriteLine("Table 'users' created successfully.");
+                    Console.WriteLine($"Table '{_userTableName}' created successfully.");
                 }
             }
         }
